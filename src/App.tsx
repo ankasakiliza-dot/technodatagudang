@@ -187,7 +187,7 @@ export default function App() {
 
           // Record Transaction in Firestore
           const newTxData = {
-            date: new Date().toISOString(),
+            date: item.date || new Date().toISOString(),
             type: item.type,
             sku: item.sku,
             name: item.name,
@@ -226,7 +226,7 @@ export default function App() {
       }
 
       showToast(`Berhasil menambahkan ${newItem.name} (${newItem.sku})`, 'success');
-      setCurrentView('dashboard');
+      // Removed: setCurrentView('dashboard');
     } catch (err) {
       console.error(err);
       showToast('Gagal menyimpan item baru ke Firebase', 'error');

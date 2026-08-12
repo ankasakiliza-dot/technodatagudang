@@ -30,6 +30,7 @@ export interface CartItem {
   type: 'Masuk' | 'Keluar' | 'Rusak';
   qty: number;
   note: string;
+  date: string;
 }
 
 export type ViewType = 'dashboard' | 'riwayat' | 'transaksi' | 'tambah' | 'opname' | 'akun';

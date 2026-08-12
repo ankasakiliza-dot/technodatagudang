@@ -19,6 +19,7 @@ export const TambahView: React.FC<TambahViewProps> = ({
   const [name, setName] = useState('');
   const [stock, setStock] = useState<number | ''>(0);
   const [minStock, setMinStock] = useState<number | ''>(5);
+  const [sessionItems, setSessionItems] = useState<InventoryItem[]>([]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -54,6 +55,7 @@ export const TambahView: React.FC<TambahViewProps> = ({
     };
 
     onSaveNewItem(newItem, initialStockNum);
+    setSessionItems(prev => [newItem, ...prev]);
     setSku('');
     setName('');
     setStock(0);
@@ -61,17 +63,18 @@ export const TambahView: React.FC<TambahViewProps> = ({
   };
 
   return (
-    <section className="view-enter">
+    <section className="view-enter space-y-6">
       <div className="glass-panel rounded-3xl p-6 shadow-xl relative overflow-hidden">
         <div className="absolute top-0 right-0 p-8 opacity-5 pointer-events-none text-white">
           <Package size={120} />
         </div>
 
         <div className="relative z-10">
-          <h2 className="text-2xl font-bold text-white mb-1">Daftar Item Baru</h2>
+          <h2 className="text-2xl font-bold text-white mb-1">Tambah Item Baru</h2>
           <p className="text-sm text-slate-400 mb-6">Tambahkan Master Data barang baru ke database.</p>
 
           <form onSubmit={handleSubmit} className="space-y-5">
+            {/* Form inputs same as before */}
             <div>
               <label className="block text-[11px] font-semibold text-slate-400 uppercase tracking-wide mb-1.5 ml-1">
                 Kode / SKU <span className="text-slate-500 capitalize normal-case font-normal">(Kosongkan untuk otomatis)</span>
@@ -141,6 +144,29 @@ export const TambahView: React.FC<TambahViewProps> = ({
           </form>
         </div>
       </div>
+
+      {sessionItems.length > 0 && (
+        <div className="glass-panel rounded-3xl p-6 shadow-xl relative overflow-hidden">
+          <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+            <Plus size={20} className="text-emerald-400" />
+            Daftar Item Baru Ditambahkan
+          </h3>
+          <div className="space-y-3">
+            {sessionItems.map((item) => (
+              <div key={item.sku} className="p-4 bg-white/5 border border-white/5 rounded-2xl flex justify-between items-center">
+                <div>
+                  <div className="font-bold text-white">{item.name}</div>
+                  <div className="text-xs text-slate-500 uppercase tracking-wider">{item.sku}</div>
+                </div>
+                <div className="text-right">
+                  <div className="text-sm font-bold text-emerald-400">{item.stock} Unit</div>
+                  <div className="text-[10px] text-slate-500">Min. Alert: {item.minStock}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </section>
   );
 };

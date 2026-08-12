@@ -26,6 +26,7 @@ export const TransaksiView: React.FC<TransaksiViewProps> = ({
   showToast
 }) => {
   const [txType, setTxType] = useState<'Masuk' | 'Keluar' | 'Rusak'>('Masuk');
+  const [txDate, setTxDate] = useState(new Date().toISOString().split('T')[0]);
   const [searchItem, setSearchItem] = useState('');
   const [selectedSku, setSelectedSku] = useState('');
   const [qty, setQty] = useState<number | ''>('');
@@ -86,13 +87,19 @@ export const TransaksiView: React.FC<TransaksiViewProps> = ({
       }
     }
 
+    // Prepare ISO date with time (current time but selected date)
+    const now = new Date();
+    const [year, month, day] = txDate.split('-').map(Number);
+    const selectedDate = new Date(year, month - 1, day, now.getHours(), now.getMinutes(), now.getSeconds());
+
     const newCartItem: CartItem = {
       id: Date.now() + Math.random(),
       sku: item.sku,
       name: item.name,
       type: txType,
       qty: numQty,
-      note: keterangan.trim() || '-'
+      note: keterangan.trim() || '-',
+      date: selectedDate.toISOString()
     };
 
     setCart(prev => [...prev, newCartItem]);
@@ -138,55 +145,74 @@ export const TransaksiView: React.FC<TransaksiViewProps> = ({
           <p className="text-sm text-slate-400 mb-6">Tambahkan beberapa barang sekaligus ke daftar sebelum disimpan.</p>
 
           <form onSubmit={handleAddToCart} className="space-y-4">
-            {/* Radio Type Switcher */}
-            <div className="bg-black/30 p-1.5 rounded-2xl flex gap-1 border border-white/5">
-              <label className="flex-1 cursor-pointer relative">
+            {/* Date and Type Switcher Container */}
+            <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+              <div className="sm:col-span-1">
+                <label className="block text-[11px] font-semibold text-slate-400 uppercase tracking-wide mb-1.5 ml-1">
+                  Tanggal
+                </label>
                 <input 
-                  type="radio" 
-                  name="tipe" 
-                  value="Masuk" 
-                  checked={txType === 'Masuk'}
-                  onChange={() => setTxType('Masuk')}
-                  className="peer sr-only"
+                  type="date" 
+                  value={txDate}
+                  onChange={e => setTxDate(e.target.value)}
+                  className="w-full bg-slate-900/50 border border-white/10 text-white text-xs rounded-xl focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 block p-3 outline-none transition-all"
                 />
-                <div className="relative z-10 py-3 text-center text-[11px] sm:text-xs font-semibold text-slate-400 peer-checked:text-white transition-colors flex flex-col sm:flex-row items-center justify-center gap-1.5 sm:gap-2">
-                  <ArrowUpRight size={16} className={txType === 'Masuk' ? 'text-emerald-400' : 'text-slate-500'} />
-                  B. Masuk
-                </div>
-                <div className={`absolute inset-0 bg-white/10 rounded-xl transition-all ${txType === 'Masuk' ? 'opacity-100 shadow-sm' : 'opacity-0'}`} />
-              </label>
+              </div>
 
-              <label className="flex-1 cursor-pointer relative">
-                <input 
-                  type="radio" 
-                  name="tipe" 
-                  value="Keluar" 
-                  checked={txType === 'Keluar'}
-                  onChange={() => setTxType('Keluar')}
-                  className="peer sr-only"
-                />
-                <div className="relative z-10 py-3 text-center text-[11px] sm:text-xs font-semibold text-slate-400 peer-checked:text-white transition-colors flex flex-col sm:flex-row items-center justify-center gap-1.5 sm:gap-2">
-                  <ArrowDownRight size={16} className={txType === 'Keluar' ? 'text-rose-400' : 'text-slate-500'} />
-                  B. Keluar
-                </div>
-                <div className={`absolute inset-0 bg-white/10 rounded-xl transition-all ${txType === 'Keluar' ? 'opacity-100 shadow-sm' : 'opacity-0'}`} />
-              </label>
+              <div className="sm:col-span-3">
+                <label className="block text-[11px] font-semibold text-slate-400 uppercase tracking-wide mb-1.5 ml-1">
+                  Tipe Transaksi
+                </label>
+                <div className="bg-black/30 p-1 rounded-xl flex gap-1 border border-white/5 h-[46px]">
+                  <label className="flex-1 cursor-pointer relative">
+                    <input 
+                      type="radio" 
+                      name="tipe" 
+                      value="Masuk" 
+                      checked={txType === 'Masuk'}
+                      onChange={() => setTxType('Masuk')}
+                      className="peer sr-only"
+                    />
+                    <div className="relative z-10 h-full flex items-center justify-center gap-1.5 text-[10px] sm:text-xs font-semibold text-slate-400 peer-checked:text-white transition-colors">
+                      <ArrowUpRight size={14} className={txType === 'Masuk' ? 'text-emerald-400' : 'text-slate-500'} />
+                      B. Masuk
+                    </div>
+                    <div className={`absolute inset-0 bg-white/10 rounded-lg transition-all ${txType === 'Masuk' ? 'opacity-100' : 'opacity-0'}`} />
+                  </label>
 
-              <label className="flex-1 cursor-pointer relative">
-                <input 
-                  type="radio" 
-                  name="tipe" 
-                  value="Rusak" 
-                  checked={txType === 'Rusak'}
-                  onChange={() => setTxType('Rusak')}
-                  className="peer sr-only"
-                />
-                <div className="relative z-10 py-3 text-center text-[11px] sm:text-xs font-semibold text-slate-400 peer-checked:text-white transition-colors flex flex-col sm:flex-row items-center justify-center gap-1.5 sm:gap-2">
-                  <AlertTriangle size={16} className={txType === 'Rusak' ? 'text-amber-400' : 'text-slate-500'} />
-                  B. Rusak
+                  <label className="flex-1 cursor-pointer relative">
+                    <input 
+                      type="radio" 
+                      name="tipe" 
+                      value="Keluar" 
+                      checked={txType === 'Keluar'}
+                      onChange={() => setTxType('Keluar')}
+                      className="peer sr-only"
+                    />
+                    <div className="relative z-10 h-full flex items-center justify-center gap-1.5 text-[10px] sm:text-xs font-semibold text-slate-400 peer-checked:text-white transition-colors">
+                      <ArrowDownRight size={14} className={txType === 'Keluar' ? 'text-rose-400' : 'text-slate-500'} />
+                      B. Keluar
+                    </div>
+                    <div className={`absolute inset-0 bg-white/10 rounded-lg transition-all ${txType === 'Keluar' ? 'opacity-100' : 'opacity-0'}`} />
+                  </label>
+
+                  <label className="flex-1 cursor-pointer relative">
+                    <input 
+                      type="radio" 
+                      name="tipe" 
+                      value="Rusak" 
+                      checked={txType === 'Rusak'}
+                      onChange={() => setTxType('Rusak')}
+                      className="peer sr-only"
+                    />
+                    <div className="relative z-10 h-full flex items-center justify-center gap-1.5 text-[10px] sm:text-xs font-semibold text-slate-400 peer-checked:text-white transition-colors">
+                      <AlertTriangle size={14} className={txType === 'Rusak' ? 'text-amber-400' : 'text-slate-500'} />
+                      B. Rusak
+                    </div>
+                    <div className={`absolute inset-0 bg-white/10 rounded-lg transition-all ${txType === 'Rusak' ? 'opacity-100' : 'opacity-0'}`} />
+                  </label>
                 </div>
-                <div className={`absolute inset-0 bg-white/10 rounded-xl transition-all ${txType === 'Rusak' ? 'opacity-100 shadow-sm' : 'opacity-0'}`} />
-              </label>
+              </div>
             </div>
 
             {/* Item Search & Dropdown */}
