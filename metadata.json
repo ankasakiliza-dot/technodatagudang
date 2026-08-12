@@ -1,0 +1,6 @@
+{
+  "name": "TechnoSync Inventory System",
+  "description": "A comprehensive inventory management system featuring stock tracking, transaction history, stock opname, export capabilities, and user access control.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

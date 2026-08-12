@@ -1,0 +1,56 @@
+{
+  "entities": {
+    "InventoryItem": {
+      "title": "Inventory Item",
+      "description": "Stock item in inventory",
+      "type": "object",
+      "properties": {
+        "sku": { "type": "string" },
+        "name": { "type": "string" },
+        "stock": { "type": "number" },
+        "minStock": { "type": "number" }
+      },
+      "required": ["sku", "name", "stock", "minStock"]
+    },
+    "Transaction": {
+      "title": "Transaction",
+      "description": "Stock transaction log record",
+      "type": "object",
+      "properties": {
+        "date": { "type": "string" },
+        "type": { "type": "string", "enum": ["Masuk", "Keluar", "Rusak"] },
+        "sku": { "type": "string" },
+        "name": { "type": "string" },
+        "qty": { "type": "number" },
+        "note": { "type": "string" },
+        "user": { "type": "string" }
+      },
+      "required": ["date", "type", "sku", "name", "qty", "user"]
+    },
+    "AppUser": {
+      "title": "Application User",
+      "description": "Registered app user account",
+      "type": "object",
+      "properties": {
+        "username": { "type": "string" },
+        "password": { "type": "string" },
+        "role": { "type": "string", "enum": ["admin", "staf"] }
+      },
+      "required": ["username", "password", "role"]
+    }
+  },
+  "firestore": {
+    "/inventory/{sku}": {
+      "schema": "InventoryItem",
+      "description": "Inventory items stored by SKU"
+    },
+    "/transactions/{transactionId}": {
+      "schema": "Transaction",
+      "description": "Inventory transaction records"
+    },
+    "/users/{username}": {
+      "schema": "AppUser",
+      "description": "App users for authentication"
+    }
+  }
+}
