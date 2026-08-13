@@ -52,23 +52,22 @@ export const TransaksiView: React.FC<TransaksiViewProps> = ({
     return item.sku.toLowerCase().includes(q) || item.name.toLowerCase().includes(q);
   });
 
-  const handleAddToCart = (e: React.FormEvent) => {
-    e.preventDefault();
+  const validateAndCreateItem = (): CartItem | null => {
     if (!selectedSku) {
       showToast('Silakan pilih barang dari daftar pencarian!', 'error');
-      return;
+      return null;
     }
 
     const item = inventoryData.find(i => i.sku === selectedSku);
     if (!item) {
       showToast('Barang tidak valid!', 'error');
-      return;
+      return null;
     }
 
     const numQty = typeof qty === 'number' ? qty : parseInt(qty);
     if (!numQty || numQty <= 0) {
       showToast('Masukkan jumlah kuantitas yang valid!', 'error');
-      return;
+      return null;
     }
 
     // Check stock for Keluar / Rusak
@@ -83,7 +82,7 @@ export const TransaksiView: React.FC<TransaksiViewProps> = ({
       const availableStock = item.stock - reservedStock;
       if (numQty > availableStock) {
         showToast(`Stok tidak mencukupi! (Sisa tersedia: ${availableStock})`, 'error');
-        return;
+        return null;
       }
     }
 
@@ -92,7 +91,7 @@ export const TransaksiView: React.FC<TransaksiViewProps> = ({
     const [year, month, day] = txDate.split('-').map(Number);
     const selectedDate = new Date(year, month - 1, day, now.getHours(), now.getMinutes(), now.getSeconds());
 
-    const newCartItem: CartItem = {
+    return {
       id: Date.now() + Math.random(),
       sku: item.sku,
       name: item.name,
@@ -101,13 +100,30 @@ export const TransaksiView: React.FC<TransaksiViewProps> = ({
       note: keterangan.trim() || '-',
       date: selectedDate.toISOString()
     };
+  };
 
-    setCart(prev => [...prev, newCartItem]);
+  const handleAddToCart = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    const newItem = validateAndCreateItem();
+    if (!newItem) return;
+
+    setCart(prev => [...prev, newItem]);
     setSearchItem('');
     setSelectedSku('');
     setQty('');
     setKeterangan('');
-    showToast(`${item.name} dimasukkan ke daftar`, 'success');
+    showToast(`${newItem.name} dimasukkan ke antrean transaksi`, 'success');
+  };
+
+  const handleDirectSave = () => {
+    const newItem = validateAndCreateItem();
+    if (!newItem) return;
+
+    onSaveBulkTransactions([newItem]);
+    setSearchItem('');
+    setSelectedSku('');
+    setQty('');
+    setKeterangan('');
   };
 
   const handleRemoveFromCart = (id: number) => {
@@ -304,19 +320,26 @@ export const TransaksiView: React.FC<TransaksiViewProps> = ({
               </div>
             </div>
 
-            <button 
-              type="submit" 
-              className={`w-full mt-1 font-bold rounded-xl text-sm px-5 py-3.5 text-center transition-all active:scale-[0.98] flex justify-center items-center gap-2 border ${
-                txType === 'Masuk'
-                  ? 'text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20 border-emerald-500/20 focus:ring-4 focus:ring-emerald-500/10'
-                  : txType === 'Rusak'
-                  ? 'text-amber-400 bg-amber-500/10 hover:bg-amber-500/20 border-amber-500/20 focus:ring-4 focus:ring-amber-500/10'
-                  : 'text-rose-400 bg-rose-500/10 hover:bg-rose-500/20 border-rose-500/20 focus:ring-4 focus:ring-rose-500/10'
-              }`}
-            >
-              <Plus size={16} strokeWidth={2.5} />
-              Tambah Data {txType}
-            </button>
+            {/* Action Buttons: Choice 1 or Choice 2 */}
+            <div className="pt-2 grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <button 
+                type="button" 
+                onClick={handleAddToCart}
+                className="w-full font-bold rounded-xl text-xs sm:text-sm px-4 py-3.5 text-center transition-all active:scale-[0.98] flex justify-center items-center gap-2 border text-cyan-300 bg-cyan-500/10 hover:bg-cyan-500/20 border-cyan-500/20 focus:ring-4 focus:ring-cyan-500/10"
+              >
+                <Plus size={16} strokeWidth={2.5} />
+                Pilihan 1: Tambah ke Antrean
+              </button>
+
+              <button 
+                type="button" 
+                onClick={handleDirectSave}
+                className="w-full font-bold rounded-xl text-xs sm:text-sm px-4 py-3.5 text-center transition-all active:scale-[0.98] flex justify-center items-center gap-2 text-white bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 font-bold shadow-lg shadow-blue-500/20 border border-cyan-400/30"
+              >
+                <CheckCircle size={16} strokeWidth={2.5} />
+                Pilihan 2: Langsung Simpan Database
+              </button>
+            </div>
           </form>
 
           {/* Cart Section */}
