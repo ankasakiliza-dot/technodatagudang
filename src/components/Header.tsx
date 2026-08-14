@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { Package, RefreshCw, Code, Moon, Palette, Check } from 'lucide-react';
+import { Package, RefreshCw, Code, Moon, Palette, Check, Upload } from 'lucide-react';
 
 interface HeaderProps {
   connectionStatus: string;
   isRefreshing: boolean;
   onRefresh: () => void;
   onOpenIntegrationModal: () => void;
+  onOpenImportModal?: () => void;
   currentTheme: string;
   onSelectTheme: (theme: string) => void;
 }
@@ -22,6 +23,7 @@ export const Header: React.FC<HeaderProps> = ({
   isRefreshing,
   onRefresh,
   onOpenIntegrationModal,
+  onOpenImportModal,
   currentTheme,
   onSelectTheme
 }) => {
@@ -48,6 +50,18 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
 
         <div className="flex items-center gap-2 relative">
+          {/* Upload Button */}
+          {onOpenImportModal && (
+            <button
+              onClick={onOpenImportModal}
+              className="p-2.5 rounded-xl bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 transition-all active:scale-95 border border-cyan-500/20 flex items-center gap-1.5 text-xs font-semibold"
+              title="Upload / Import File Excel & CSV"
+            >
+              <Upload size={16} />
+              <span className="hidden sm:inline">Upload File</span>
+            </button>
+          )}
+
           {/* Theme Dropdown Toggle */}
           <div className="relative">
             <button 
@@ -112,4 +126,5 @@ export const Header: React.FC<HeaderProps> = ({
     </header>
   );
 };
+
 

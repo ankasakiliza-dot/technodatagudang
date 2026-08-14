@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { Package, Plus } from 'lucide-react';
+import { Package, Plus, Upload, FileSpreadsheet } from 'lucide-react';
 import { InventoryItem, AppUser } from '../types';
 
 interface TambahViewProps {
   inventoryData: InventoryItem[];
   currentUser: AppUser | null;
   onSaveNewItem: (newItem: InventoryItem, initialStock: number) => void;
+  onOpenImportModal?: (tab?: 'inventory' | 'transactions') => void;
   showToast: (msg: string, type?: 'success' | 'error') => void;
 }
 
@@ -13,6 +14,7 @@ export const TambahView: React.FC<TambahViewProps> = ({
   inventoryData,
   currentUser,
   onSaveNewItem,
+  onOpenImportModal,
   showToast
 }) => {
   const [sku, setSku] = useState('');
@@ -64,17 +66,37 @@ export const TambahView: React.FC<TambahViewProps> = ({
 
   return (
     <section className="view-enter space-y-6">
+      {/* Bulk Upload Banner */}
+      <div className="glass-panel rounded-3xl p-5 border border-cyan-500/20 bg-gradient-to-r from-blue-900/30 to-cyan-900/20 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-3.5">
+          <div className="w-11 h-11 rounded-2xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center shrink-0 border border-cyan-500/30 shadow-lg shadow-cyan-500/10">
+            <Upload size={22} />
+          </div>
+          <div>
+            <h3 className="text-sm font-bold text-white">Punya Banyak Data Barang?</h3>
+            <p className="text-xs text-slate-400">Upload file Excel (.xlsx) atau CSV untuk memasukkan puluhan barang sekaligus.</p>
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={() => onOpenImportModal?.('inventory')}
+          className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white text-xs font-bold transition-all shadow-md shadow-cyan-500/20 flex items-center justify-center gap-2 shrink-0 active:scale-95"
+        >
+          <FileSpreadsheet size={15} />
+          Upload Excel / CSV
+        </button>
+      </div>
+
       <div className="glass-panel rounded-3xl p-6 shadow-xl relative overflow-hidden">
         <div className="absolute top-0 right-0 p-8 opacity-5 pointer-events-none text-white">
           <Package size={120} />
         </div>
 
         <div className="relative z-10">
-          <h2 className="text-2xl font-bold text-white mb-1">Tambah Item Baru</h2>
-          <p className="text-sm text-slate-400 mb-6">Tambahkan Master Data barang baru ke database.</p>
+          <h2 className="text-2xl font-bold text-white mb-1">Tambah Item Satuan</h2>
+          <p className="text-sm text-slate-400 mb-6">Tambahkan Master Data barang baru secara manual ke database.</p>
 
           <form onSubmit={handleSubmit} className="space-y-5">
-            {/* Form inputs same as before */}
             <div>
               <label className="block text-[11px] font-semibold text-slate-400 uppercase tracking-wide mb-1.5 ml-1">
                 Kode / SKU <span className="text-slate-500 capitalize normal-case font-normal">(Kosongkan untuk otomatis)</span>
@@ -170,3 +192,4 @@ export const TambahView: React.FC<TambahViewProps> = ({
     </section>
   );
 };
+

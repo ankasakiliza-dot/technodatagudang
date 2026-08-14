@@ -23,6 +23,7 @@ import { TambahView } from './components/TambahView';
 import { OpnameView } from './components/OpnameView';
 import { AkunView } from './components/AkunView';
 import { Modals } from './components/Modals';
+import { ImportModal } from './components/ImportModal';
 import { ToastContainer, ToastItem } from './components/ToastContainer';
 
 const INITIAL_DEMO_USERS: AppUser[] = [
@@ -67,6 +68,10 @@ export default function App() {
   const [addUserModalOpen, setAddUserModalOpen] = useState(false);
   const [changePasswordModalOpen, setChangePasswordModalOpen] = useState(false);
   const [integrationModalOpen, setIntegrationModalOpen] = useState(false);
+  
+  // Bulk Import Modal State
+  const [importModalOpen, setImportModalOpen] = useState(false);
+  const [importInitialTab, setImportInitialTab] = useState<'inventory' | 'transactions'>('inventory');
 
   const showToast = (message: string, type: 'success' | 'error' = 'success') => {
     const id = Date.now() + Math.random();
@@ -231,6 +236,96 @@ export default function App() {
       console.error(err);
       showToast('Gagal menyimpan item baru ke Firebase', 'error');
     }
+  };
+
+  const handleOpenImportModal = (tab: 'inventory' | 'transactions' = 'inventory') => {
+    setImportInitialTab(tab);
+    setImportModalOpen(true);
+  };
+
+  const handleBulkImportInventory = async (items: InventoryItem[], updateExisting: boolean) => {
+    if (!currentUser) throw new Error('Pengguna belum login');
+    let created = 0;
+    let updated = 0;
+
+    for (const item of items) {
+      const existing = inventoryData.find(i => i.sku === item.sku);
+      if (existing) {
+        if (updateExisting) {
+          await setDoc(doc(db, 'inventory', item.sku), {
+            ...existing,
+            name: item.name || existing.name,
+            stock: item.stock !== undefined ? item.stock : existing.stock,
+            minStock: item.minStock !== undefined ? item.minStock : existing.minStock
+          });
+          updated++;
+        }
+      } else {
+        await setDoc(doc(db, 'inventory', item.sku), item);
+        created++;
+        if (item.stock > 0) {
+          await addDoc(collection(db, 'transactions'), {
+            date: new Date().toISOString(),
+            type: 'Masuk',
+            sku: item.sku,
+            name: item.name,
+            qty: item.stock,
+            note: 'Stok Awal (Import Excel)',
+            user: currentUser.username
+          });
+        }
+      }
+    }
+
+    return { created, updated };
+  };
+
+  const handleBulkImportTransactions = async (txList: Transaction[], syncStock: boolean) => {
+    if (!currentUser) throw new Error('Pengguna belum login');
+    let savedCount = 0;
+
+    const stockDeltas: { [sku: string]: { name: string; delta: number } } = {};
+
+    for (const tx of txList) {
+      const txData = {
+        date: tx.date || new Date().toISOString(),
+        type: tx.type,
+        sku: tx.sku,
+        name: tx.name,
+        qty: tx.qty,
+        note: tx.note || 'Import Excel Transaksi',
+        user: tx.user || currentUser.username
+      };
+
+      await addDoc(collection(db, 'transactions'), txData);
+      savedCount++;
+
+      if (syncStock && tx.sku) {
+        if (!stockDeltas[tx.sku]) {
+          stockDeltas[tx.sku] = { name: tx.name, delta: 0 };
+        }
+        if (tx.type === 'Masuk') {
+          stockDeltas[tx.sku].delta += tx.qty;
+        } else {
+          stockDeltas[tx.sku].delta -= tx.qty;
+        }
+      }
+    }
+
+    if (syncStock) {
+      for (const [sku, info] of Object.entries(stockDeltas)) {
+        const invItem = inventoryData.find(i => i.sku === sku);
+        if (invItem) {
+          const newStock = Math.max(0, invItem.stock + info.delta);
+          await setDoc(doc(db, 'inventory', sku), {
+            ...invItem,
+            stock: newStock
+          });
+        }
+      }
+    }
+
+    return { savedCount };
   };
 
   const handlePromptEdit = (sku: string) => {
@@ -409,6 +504,7 @@ export default function App() {
             isRefreshing={isRefreshing}
             onRefresh={handleRefreshData}
             onOpenIntegrationModal={() => setIntegrationModalOpen(true)}
+            onOpenImportModal={() => handleOpenImportModal('inventory')}
             currentTheme={theme}
             onSelectTheme={setTheme}
           />
@@ -422,6 +518,7 @@ export default function App() {
                 onSwitchView={setCurrentView}
                 onPromptEdit={handlePromptEdit}
                 onPromptDelete={handlePromptDelete}
+                onOpenImportModal={handleOpenImportModal}
                 showToast={showToast}
               />
             )}
@@ -431,6 +528,7 @@ export default function App() {
                 transactions={transactions}
                 usersData={usersData}
                 onSwitchView={setCurrentView}
+                onOpenImportModal={handleOpenImportModal}
                 showToast={showToast}
               />
             )}
@@ -450,6 +548,7 @@ export default function App() {
                 inventoryData={inventoryData}
                 currentUser={currentUser}
                 onSaveNewItem={handleSaveNewItem}
+                onOpenImportModal={handleOpenImportModal}
                 showToast={showToast}
               />
             )}
@@ -496,6 +595,17 @@ export default function App() {
             onSaveChangePassword={handleSaveChangePassword}
             integrationModalOpen={integrationModalOpen}
             onCloseIntegrationModal={() => setIntegrationModalOpen(false)}
+            showToast={showToast}
+          />
+
+          <ImportModal 
+            isOpen={importModalOpen}
+            onClose={() => setImportModalOpen(false)}
+            initialTab={importInitialTab}
+            existingInventory={inventoryData}
+            currentUser={currentUser}
+            onImportInventory={handleBulkImportInventory}
+            onImportTransactions={handleBulkImportTransactions}
             showToast={showToast}
           />
         </div>

@@ -6,6 +6,7 @@ import {
   FileSpreadsheet, 
   Search, 
   Download, 
+  Upload,
   FileText, 
   Pencil, 
   Trash2, 
@@ -25,6 +26,7 @@ interface DashboardViewProps {
   onSwitchView: (view: ViewType) => void;
   onPromptEdit: (sku: string) => void;
   onPromptDelete: (sku: string) => void;
+  onOpenImportModal?: (tab?: 'inventory' | 'transactions') => void;
   showToast: (msg: string, type?: 'success' | 'error') => void;
 }
 
@@ -35,6 +37,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   onSwitchView,
   onPromptEdit,
   onPromptDelete,
+  onOpenImportModal,
   showToast
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -154,6 +157,14 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 />
               </div>
               <div className="flex gap-1.5 shrink-0">
+                <button 
+                  onClick={() => onOpenImportModal?.('inventory')}
+                  className="p-2.5 rounded-xl bg-cyan-500/20 text-cyan-400 hover:bg-cyan-500/30 transition-colors border border-cyan-500/20 flex items-center gap-1.5 text-xs font-semibold" 
+                  title="Upload / Import Database Excel & CSV"
+                >
+                  <Upload size={16} />
+                  <span className="hidden md:inline">Upload Excel</span>
+                </button>
                 <button 
                   onClick={handleExportCSV} 
                   className="p-2.5 rounded-xl bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 transition-colors border border-emerald-500/20" 

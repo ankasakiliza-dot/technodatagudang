@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { 
   ChevronLeft, 
   Download, 
+  Upload,
   FileText, 
   Search, 
   Calendar, 
@@ -20,6 +21,7 @@ interface RiwayatViewProps {
   transactions: Transaction[];
   usersData: AppUser[];
   onSwitchView: (view: ViewType) => void;
+  onOpenImportModal?: (tab?: 'inventory' | 'transactions') => void;
   showToast: (msg: string, type?: 'success' | 'error') => void;
 }
 
@@ -27,6 +29,7 @@ export const RiwayatView: React.FC<RiwayatViewProps> = ({
   transactions,
   usersData,
   onSwitchView,
+  onOpenImportModal,
   showToast
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -103,8 +106,15 @@ export const RiwayatView: React.FC<RiwayatViewProps> = ({
           </div>
           <div className="flex gap-2">
             <button 
+              onClick={() => onOpenImportModal?.('transactions')} 
+              className="text-[11px] font-semibold text-cyan-300 hover:text-white transition-colors bg-cyan-500/20 hover:bg-cyan-500/30 px-3 py-1.5 rounded-lg flex items-center gap-1.5 border border-cyan-500/30"
+              title="Upload File Excel / CSV Transaksi"
+            >
+              <Upload size={13} /> Upload Excel
+            </button>
+            <button 
               onClick={() => onSwitchView('transaksi')} 
-              className="text-[11px] font-semibold text-cyan-400 hover:text-cyan-300 transition-colors bg-cyan-500/10 hover:bg-cyan-500/20 px-3 py-1.5 rounded-lg hidden sm:flex items-center gap-1"
+              className="text-[11px] font-semibold text-emerald-400 hover:text-emerald-300 transition-colors bg-emerald-500/10 hover:bg-emerald-500/20 px-3 py-1.5 rounded-lg hidden sm:flex items-center gap-1"
             >
               <Plus size={12} /> Transaksi Baru
             </button>

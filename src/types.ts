@@ -7,7 +7,7 @@ export interface InventoryItem {
 }
 
 export interface Transaction {
-  id: string | number;
+  id?: string | number;
   date: string;
   type: 'Masuk' | 'Keluar' | 'Rusak';
   sku: string;
