@@ -6,7 +6,7 @@ import {
   FileSpreadsheet, 
   Search, 
   Download, 
-  Upload,
+  Upload, 
   FileText, 
   Pencil, 
   Trash2, 
@@ -14,10 +14,15 @@ import {
   Plus, 
   ArrowUpRight, 
   ArrowDownRight, 
-  AlertTriangle 
+  AlertTriangle,
+  Boxes,
+  Eye,
+  Layers,
+  X
 } from 'lucide-react';
 import { InventoryItem, Transaction, AppUser, ViewType } from '../types';
 import { downloadInventoryCSV, downloadInventoryPDF } from '../lib/exportUtils';
+import { calculateBundleStock, getBundleComponentBreakdown } from '../lib/bundleUtils';
 
 interface DashboardViewProps {
   inventoryData: InventoryItem[];
@@ -41,20 +46,25 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   showToast
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeFilter, setActiveFilter] = useState<'semua' | 'aman' | 'tipis' | 'habis'>('semua');
+  const [activeFilter, setActiveFilter] = useState<'semua' | 'paket' | 'satuan' | 'aman' | 'tipis' | 'habis'>('semua');
+  const [selectedBundleBreakdown, setSelectedBundleBreakdown] = useState<InventoryItem | null>(null);
 
   const totalItems = inventoryData.length;
-  const totalUnits = inventoryData.reduce((sum, item) => sum + (item.stock || 0), 0);
+  const countPaket = inventoryData.filter(item => item.isBundle).length;
+  const totalUnits = inventoryData
+    .filter(item => !item.isBundle)
+    .reduce((sum, item) => sum + (item.stock || 0), 0);
 
-  // Health Stats
+  // Health Stats calculation
   let countAman = 0;
   let countTipis = 0;
   let countHabis = 0;
 
   inventoryData.forEach(item => {
+    const effectiveStock = item.isBundle ? calculateBundleStock(item, inventoryData) : item.stock;
     const min = item.minStock !== undefined ? item.minStock : 5;
-    if (item.stock === 0) countHabis++;
-    else if (item.stock <= min) countTipis++;
+    if (effectiveStock === 0) countHabis++;
+    else if (effectiveStock <= min) countTipis++;
     else countAman++;
   });
 
@@ -65,16 +75,20 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
   // Filter Inventory
   const filteredInventory = inventoryData.filter(item => {
+    const effectiveStock = item.isBundle ? calculateBundleStock(item, inventoryData) : item.stock;
     const min = item.minStock !== undefined ? item.minStock : 5;
     const matchSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
                         item.sku.toLowerCase().includes(searchQuery.toLowerCase());
     
-    let matchFilter = true;
-    if (activeFilter === 'aman') matchFilter = item.stock > min;
-    if (activeFilter === 'tipis') matchFilter = item.stock > 0 && item.stock <= min;
-    if (activeFilter === 'habis') matchFilter = item.stock === 0;
+    if (!matchSearch) return false;
 
-    return matchSearch && matchFilter;
+    if (activeFilter === 'paket') return !!item.isBundle;
+    if (activeFilter === 'satuan') return !item.isBundle;
+    if (activeFilter === 'aman') return effectiveStock > min;
+    if (activeFilter === 'tipis') return effectiveStock > 0 && effectiveStock <= min;
+    if (activeFilter === 'habis') return effectiveStock === 0;
+
+    return true;
   });
 
   const handleExportCSV = () => {
@@ -100,9 +114,14 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           <div className="absolute -right-4 -top-4 w-16 h-16 bg-blue-500/20 rounded-full blur-xl group-hover:bg-blue-500/30 transition-all"></div>
           <span className="text-slate-400 text-xs font-semibold uppercase tracking-wider mb-1 flex items-center gap-1.5">
             <Columns size={12} />
-            Total Item
+            Total Master Barang
           </span>
-          <span className="text-4xl font-black text-white">{totalItems}</span>
+          <div className="flex items-baseline gap-2">
+            <span className="text-4xl font-black text-white">{totalItems}</span>
+            {countPaket > 0 && (
+              <span className="text-xs font-semibold text-purple-300">({countPaket} paket)</span>
+            )}
+          </div>
         </div>
 
         <div className="bg-gradient-to-br from-blue-600 to-cyan-500 rounded-3xl p-5 shadow-lg shadow-blue-500/25 flex flex-col justify-center relative overflow-hidden">
@@ -111,7 +130,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           </div>
           <span className="text-blue-100 text-xs font-semibold uppercase tracking-wider mb-1 flex items-center gap-1.5 relative z-10">
             <Package size={12} />
-            Total Unit
+            Total Unit Fisik
           </span>
           <span className="text-4xl font-black text-white relative z-10">{totalUnits}</span>
         </div>
@@ -123,7 +142,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           <div className="flex justify-between items-end mb-3">
             <h3 className="font-bold text-white text-sm flex items-center gap-2">
               <Activity size={16} className="text-emerald-400" />
-              Kesehatan Stok
+              Kesehatan Stok Gudang & Paket
             </h3>
           </div>
           <div className="h-2.5 w-full bg-slate-800 rounded-full overflow-hidden flex">
@@ -143,7 +162,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           <div className="px-5 py-4 border-b border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white/[0.02]">
             <h2 className="font-bold text-white text-lg flex items-center gap-2">
               <FileSpreadsheet size={18} className="text-blue-400" />
-              Ketersediaan Data
+              Ketersediaan Data Barang
             </h2>
             <div className="flex items-center gap-2 w-full sm:w-auto">
               <div className="relative w-full sm:w-64">
@@ -152,7 +171,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                   type="text" 
                   value={searchQuery}
                   onChange={e => setSearchQuery(e.target.value)}
-                  placeholder="Cari SKU / Barang..." 
+                  placeholder="Cari SKU / Nama Barang..." 
                   className="w-full bg-slate-900/50 border border-white/10 text-sm rounded-xl focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 block pl-10 pr-4 py-2.5 placeholder-slate-500 text-white transition-all outline-none"
                 />
               </div>
@@ -185,9 +204,11 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
           {/* Filter Pills */}
           <div className="px-5 py-3 border-b border-white/10 bg-black/20 flex gap-2 overflow-x-auto custom-scrollbar">
-            {(['semua', 'aman', 'tipis', 'habis'] as const).map((filter) => {
+            {(['semua', 'paket', 'satuan', 'aman', 'tipis', 'habis'] as const).map((filter) => {
               const labels = {
                 semua: 'Semua Data',
+                paket: `📦 Barang Paket (${countPaket})`,
+                satuan: 'Item Satuan',
                 aman: 'Stok Aman',
                 tipis: 'Stok Tipis (Alert)',
                 habis: 'Stok Habis (0)'
@@ -199,7 +220,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                   onClick={() => setActiveFilter(filter)}
                   className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all ${
                     isSelected
-                      ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
+                      ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30 shadow-sm'
                       : 'bg-white/5 text-slate-400 hover:text-slate-200 hover:bg-white/10 border border-transparent'
                   }`}
                 >
@@ -216,21 +237,24 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 <tr>
                   <th scope="col" className="px-5 py-4 font-semibold w-1/4 whitespace-nowrap">SKU</th>
                   <th scope="col" className="px-5 py-4 font-semibold w-1/2 min-w-[150px]">Item</th>
-                  <th scope="col" className="px-5 py-4 font-semibold text-right w-1/4">Stok</th>
+                  <th scope="col" className="px-5 py-4 font-semibold text-right w-1/4">Stok / Kapasitas</th>
                   <th scope="col" className="px-5 py-4 font-semibold text-center whitespace-nowrap">Status</th>
-                  {isAdmin && <th scope="col" className="px-5 py-4 font-semibold text-center whitespace-nowrap">Aksi</th>}
+                  <th scope="col" className="px-5 py-4 font-semibold text-center whitespace-nowrap">Aksi</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5">
                 {filteredInventory.map(item => {
+                  const effectiveStock = item.isBundle 
+                    ? calculateBundleStock(item, inventoryData) 
+                    : item.stock;
                   const min = item.minStock !== undefined ? item.minStock : 5;
                   let statusClass = 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20';
                   let statusText = 'Aman';
 
-                  if (item.stock === 0) {
+                  if (effectiveStock === 0) {
                     statusClass = 'text-rose-400 bg-rose-500/10 border-rose-500/20';
                     statusText = 'Habis';
-                  } else if (item.stock <= min) {
+                  } else if (effectiveStock <= min) {
                     statusClass = 'text-amber-400 bg-amber-500/10 border-amber-500/20';
                     statusText = 'Tipis';
                   }
@@ -238,33 +262,66 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                   return (
                     <tr key={item.sku} className="hover:bg-white/[0.02] transition-colors">
                       <td className="px-5 py-4 font-mono text-xs text-slate-400">{item.sku}</td>
-                      <td className="px-5 py-4 font-semibold text-white">{item.name}</td>
-                      <td className="px-5 py-4 font-bold text-right text-lg">{item.stock}</td>
+                      <td className="px-5 py-4 font-semibold text-white">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span>{item.name}</span>
+                          {item.isBundle && (
+                            <button
+                              type="button"
+                              onClick={() => setSelectedBundleBreakdown(item)}
+                              className="px-2 py-0.5 rounded text-[10px] font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30 hover:bg-purple-500/30 transition-all flex items-center gap-1 cursor-pointer"
+                              title="Klik untuk melihat rincian barang paket"
+                            >
+                              <Boxes size={11} />
+                              Paket ({item.bundleItems?.length || 0})
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-5 py-4 font-bold text-right text-lg">
+                        <span className={item.isBundle ? 'text-purple-300' : 'text-white'}>
+                          {effectiveStock}
+                        </span>
+                        <span className="text-[11px] font-normal text-slate-400 ml-1">
+                          {item.isBundle ? 'pkt' : 'unit'}
+                        </span>
+                      </td>
                       <td className="px-5 py-4 text-center">
                         <span className={`px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded-md border ${statusClass}`}>
                           {statusText}
                         </span>
                       </td>
-                      {isAdmin && (
-                        <td className="px-5 py-4 text-center">
-                          <div className="flex items-center justify-center gap-1.5">
+                      <td className="px-5 py-4 text-center">
+                        <div className="flex items-center justify-center gap-1.5">
+                          {item.isBundle && (
                             <button 
-                              onClick={() => onPromptEdit(item.sku)} 
-                              className="p-2 bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 rounded-lg transition-colors border border-blue-500/20" 
-                              title="Edit Barang"
+                              onClick={() => setSelectedBundleBreakdown(item)} 
+                              className="p-2 bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 rounded-lg transition-colors border border-purple-500/20" 
+                              title="Lihat Rincian Komponen Paket"
                             >
-                              <Pencil size={14} strokeWidth={2.5} />
+                              <Eye size={14} strokeWidth={2.5} />
                             </button>
-                            <button 
-                              onClick={() => onPromptDelete(item.sku)} 
-                              className="p-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 rounded-lg transition-colors border border-rose-500/20" 
-                              title="Hapus Barang"
-                            >
-                              <Trash2 size={14} strokeWidth={2.5} />
-                            </button>
-                          </div>
-                        </td>
-                      )}
+                          )}
+                          {isAdmin && (
+                            <>
+                              <button 
+                                onClick={() => onPromptEdit(item.sku)} 
+                                className="p-2 bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 rounded-lg transition-colors border border-blue-500/20" 
+                                title="Edit Barang"
+                              >
+                                <Pencil size={14} strokeWidth={2.5} />
+                              </button>
+                              <button 
+                                onClick={() => onPromptDelete(item.sku)} 
+                                className="p-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 rounded-lg transition-colors border border-rose-500/20" 
+                                title="Hapus Barang"
+                              >
+                                <Trash2 size={14} strokeWidth={2.5} />
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      </td>
                     </tr>
                   );
                 })}
@@ -353,6 +410,97 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           </div>
         </div>
       </div>
+
+      {/* BUNDLE BREAKDOWN MODAL */}
+      {selectedBundleBreakdown && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm modal-enter">
+          <div className="glass-panel w-full max-w-lg rounded-3xl p-6 shadow-2xl modal-content-enter space-y-4">
+            <div className="flex items-center justify-between border-b border-white/10 pb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-purple-500/20 text-purple-300 flex items-center justify-center border border-purple-500/30">
+                  <Boxes size={20} />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-white">{selectedBundleBreakdown.name}</h3>
+                  <p className="text-xs text-slate-400 font-mono">SKU: {selectedBundleBreakdown.sku}</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedBundleBreakdown(null)}
+                className="p-2 text-slate-400 hover:text-white rounded-xl hover:bg-white/10 transition-colors"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Capacity Summary */}
+            <div className="p-4 rounded-2xl bg-gradient-to-r from-purple-900/30 to-indigo-900/30 border border-purple-500/30 flex items-center justify-between">
+              <div>
+                <div className="text-xs font-bold text-purple-300 uppercase tracking-wider">Kapasitas Maksimal Paket</div>
+                <div className="text-xs text-slate-300">Berdasarkan stok komponen terendah di gudang</div>
+              </div>
+              <div className="text-2xl font-black text-white">
+                {calculateBundleStock(selectedBundleBreakdown, inventoryData)} <span className="text-xs text-purple-300 font-semibold">Paket</span>
+              </div>
+            </div>
+
+            {/* Components list */}
+            <div>
+              <div className="text-xs font-bold text-slate-300 uppercase tracking-wider mb-2 flex items-center gap-2">
+                <Layers size={14} className="text-purple-400" />
+                Komponen Pembentuk Paket
+              </div>
+              <div className="space-y-2 max-h-60 overflow-y-auto custom-scrollbar pr-1">
+                {getBundleComponentBreakdown(selectedBundleBreakdown, inventoryData).map(comp => (
+                  <div 
+                    key={comp.sku}
+                    className={`p-3 rounded-xl border flex items-center justify-between ${
+                      comp.isLimiting 
+                        ? 'bg-amber-500/10 border-amber-500/30' 
+                        : 'bg-white/5 border-white/5'
+                    }`}
+                  >
+                    <div>
+                      <div className="text-sm font-semibold text-white flex items-center gap-2">
+                        <span>{comp.name}</span>
+                        {comp.isLimiting && (
+                          <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                            Komponen Pembatas
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-[10px] text-slate-400 font-mono">
+                        SKU: {comp.sku} • Butuh <span className="text-purple-300 font-bold">{comp.requiredQty} unit</span> per paket
+                      </div>
+                    </div>
+
+                    <div className="text-right">
+                      <div className={`text-sm font-bold ${comp.currentStock > 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                        Stok: {comp.currentStock}
+                      </div>
+                      <div className="text-[10px] text-slate-400">
+                        Cukup untuk: {comp.maxSets} paket
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="pt-2">
+              <button
+                type="button"
+                onClick={() => setSelectedBundleBreakdown(null)}
+                className="w-full py-3 rounded-xl bg-white/10 hover:bg-white/20 text-white text-sm font-semibold transition-all active:scale-95"
+              >
+                Tutup
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 };
+

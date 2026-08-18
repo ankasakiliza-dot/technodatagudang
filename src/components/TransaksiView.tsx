@@ -6,9 +6,13 @@ import {
   Plus, 
   Trash2, 
   CheckCircle, 
-  Repeat 
+  Repeat,
+  Boxes,
+  Info,
+  CheckCircle2
 } from 'lucide-react';
 import { InventoryItem, CartItem, AppUser, ViewType } from '../types';
+import { calculateBundleStock, checkBundleFulfillable, getBundleComponentBreakdown } from '../lib/bundleUtils';
 
 interface TransaksiViewProps {
   inventoryData: InventoryItem[];
@@ -52,6 +56,11 @@ export const TransaksiView: React.FC<TransaksiViewProps> = ({
     return item.sku.toLowerCase().includes(q) || item.name.toLowerCase().includes(q);
   });
 
+  const selectedItemObj = inventoryData.find(i => i.sku === selectedSku);
+  const isSelectedBundle = !!selectedItemObj?.isBundle;
+  const bundleAvailableStock = selectedItemObj ? calculateBundleStock(selectedItemObj, inventoryData) : 0;
+  const bundleBreakdown = selectedItemObj && isSelectedBundle ? getBundleComponentBreakdown(selectedItemObj, inventoryData) : [];
+
   const validateAndCreateItem = (): CartItem | null => {
     if (!selectedSku) {
       showToast('Silakan pilih barang dari daftar pencarian!', 'error');
@@ -72,17 +81,53 @@ export const TransaksiView: React.FC<TransaksiViewProps> = ({
 
     // Check stock for Keluar / Rusak
     if (txType === 'Keluar' || txType === 'Rusak') {
-      let reservedStock = 0;
-      cart.forEach(c => {
-        if (c.sku === selectedSku) {
-          if (c.type === 'Keluar' || c.type === 'Rusak') reservedStock += c.qty;
-          if (c.type === 'Masuk') reservedStock -= c.qty;
+      if (item.isBundle && item.bundleItems && item.bundleItems.length > 0) {
+        // Calculate reserved quantities for all components in cart
+        const componentDemands: { [sku: string]: number } = {};
+        cart.forEach(c => {
+          if (c.type === 'Keluar' || c.type === 'Rusak') {
+            const cartItemObj = inventoryData.find(i => i.sku === c.sku);
+            if (cartItemObj?.isBundle && cartItemObj.bundleItems) {
+              cartItemObj.bundleItems.forEach(b => {
+                componentDemands[b.sku] = (componentDemands[b.sku] || 0) + (b.qty * c.qty);
+              });
+            } else {
+              componentDemands[c.sku] = (componentDemands[c.sku] || 0) + c.qty;
+            }
+          }
+        });
+
+        // Check if current components have enough capacity
+        for (const comp of item.bundleItems) {
+          const invComp = inventoryData.find(i => i.sku === comp.sku);
+          const currentCompStock = invComp ? invComp.stock : 0;
+          const reservedComp = componentDemands[comp.sku] || 0;
+          const remainingAvailable = currentCompStock - reservedComp;
+          const needed = comp.qty * numQty;
+
+          if (needed > remainingAvailable) {
+            const maxPossible = Math.max(0, Math.floor(remainingAvailable / comp.qty));
+            showToast(
+              `Stok komponen "${comp.name}" tidak mencukupi! Butuh ${needed} unit, tersisa ${remainingAvailable} unit (Maks ${maxPossible} paket).`,
+              'error'
+            );
+            return null;
+          }
         }
-      });
-      const availableStock = item.stock - reservedStock;
-      if (numQty > availableStock) {
-        showToast(`Stok tidak mencukupi! (Sisa tersedia: ${availableStock})`, 'error');
-        return null;
+      } else {
+        // Standard item check
+        let reservedStock = 0;
+        cart.forEach(c => {
+          if (c.sku === selectedSku) {
+            if (c.type === 'Keluar' || c.type === 'Rusak') reservedStock += c.qty;
+            if (c.type === 'Masuk') reservedStock -= c.qty;
+          }
+        });
+        const availableStock = item.stock - reservedStock;
+        if (numQty > availableStock) {
+          showToast(`Stok tidak mencukupi! (Sisa tersedia: ${availableStock})`, 'error');
+          return null;
+        }
       }
     }
 
@@ -97,7 +142,7 @@ export const TransaksiView: React.FC<TransaksiViewProps> = ({
       name: item.name,
       type: txType,
       qty: numQty,
-      note: keterangan.trim() || '-',
+      note: keterangan.trim() || (item.isBundle ? 'Transaksi Barang Paket' : '-'),
       date: selectedDate.toISOString()
     };
   };
@@ -158,7 +203,7 @@ export const TransaksiView: React.FC<TransaksiViewProps> = ({
               Lihat Riwayat
             </button>
           </div>
-          <p className="text-sm text-slate-400 mb-6">Tambahkan beberapa barang sekaligus ke daftar sebelum disimpan.</p>
+          <p className="text-sm text-slate-400 mb-6">Tambahkan beberapa transaksi sekaligus ke antrean sebelum disimpan ke database.</p>
 
           <form onSubmit={handleAddToCart} className="space-y-4">
             {/* Date and Type Switcher Container */}
@@ -256,7 +301,7 @@ export const TransaksiView: React.FC<TransaksiViewProps> = ({
                     setDropdownOpen(true);
                   }}
                   className="w-full bg-slate-900/50 border border-white/10 text-white text-sm rounded-xl focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 block p-3.5 outline-none transition-all placeholder-slate-500" 
-                  placeholder="Ketik SKU atau Nama..." 
+                  placeholder="Ketik SKU atau Nama Barang..." 
                   required
                 />
               </div>
@@ -266,35 +311,93 @@ export const TransaksiView: React.FC<TransaksiViewProps> = ({
                   {filteredDropdownItems.length === 0 ? (
                     <li className="p-4 text-sm text-slate-500 text-center">Barang tidak ditemukan</li>
                   ) : (
-                    filteredDropdownItems.map(item => (
-                      <li 
-                        key={item.sku}
-                        onClick={() => {
-                          setSearchItem(item.name);
-                          setSelectedSku(item.sku);
-                          setDropdownOpen(false);
-                        }}
-                        className="px-4 py-3 hover:bg-white/10 cursor-pointer flex justify-between items-center transition-colors border-b border-white/5 last:border-0"
-                      >
-                        <div>
-                          <div className="text-sm font-semibold text-white">{item.name}</div>
-                          <div className="text-[10px] text-slate-400">{item.sku}</div>
-                        </div>
-                        <div className={`text-xs font-bold ${item.stock > 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-                          Stok: {item.stock}
-                        </div>
-                      </li>
-                    ))
+                    filteredDropdownItems.map(item => {
+                      const displayStock = item.isBundle 
+                        ? calculateBundleStock(item, inventoryData) 
+                        : item.stock;
+
+                      return (
+                        <li 
+                          key={item.sku}
+                          onClick={() => {
+                            setSearchItem(item.name);
+                            setSelectedSku(item.sku);
+                            setDropdownOpen(false);
+                          }}
+                          className="px-4 py-3 hover:bg-white/10 cursor-pointer flex justify-between items-center transition-colors border-b border-white/5 last:border-0"
+                        >
+                          <div>
+                            <div className="text-sm font-semibold text-white flex items-center gap-2">
+                              {item.name}
+                              {item.isBundle && (
+                                <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                                  📦 Paket ({item.bundleItems?.length || 0})
+                                </span>
+                              )}
+                            </div>
+                            <div className="text-[10px] text-slate-400">{item.sku}</div>
+                          </div>
+                          <div className={`text-xs font-bold ${displayStock > 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                            {item.isBundle ? `Kapasitas: ${displayStock} Pkt` : `Stok: ${displayStock}`}
+                          </div>
+                        </li>
+                      );
+                    })
                   )}
                 </ul>
               )}
             </div>
 
+            {/* BUNDLE INFO & COMPONENT STATUS CARD */}
+            {selectedItemObj && isSelectedBundle && (
+              <div className="p-4 rounded-2xl bg-gradient-to-r from-purple-950/60 to-indigo-950/60 border border-purple-500/30 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-purple-300 font-bold text-xs">
+                    <Boxes size={16} />
+                    Barang Paket Kombinasi Terpilih
+                  </div>
+                  <div className="text-xs font-bold text-purple-200 bg-purple-500/20 px-2.5 py-1 rounded-lg border border-purple-500/30">
+                    Kapasitas: {bundleAvailableStock} Paket
+                  </div>
+                </div>
+
+                <p className="text-[11px] text-slate-300">
+                  {txType === 'Keluar' || txType === 'Rusak' 
+                    ? '⚠️ Saat transaksi KELUAR/RUSAK diproses, sistem akan secara otomatis memotong stok barang-barang komponen berikut:' 
+                    : 'ℹ️ Komponen yang terdaftar dalam paket ini:'}
+                </p>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {bundleBreakdown.map(comp => (
+                    <div 
+                      key={comp.sku} 
+                      className="p-2.5 rounded-xl bg-black/40 border border-white/5 flex items-center justify-between text-xs"
+                    >
+                      <div className="truncate pr-2">
+                        <span className="font-bold text-purple-300 mr-1.5">{comp.requiredQty}x</span>
+                        <span className="text-white">{comp.name}</span>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <span className={`font-mono text-[11px] font-bold ${comp.currentStock > 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                          Stok: {comp.currentStock}
+                        </span>
+                        {comp.isLimiting && (
+                          <span className="block text-[9px] text-amber-400 font-semibold">
+                            (Maks {comp.maxSets} pkt)
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Qty & Note */}
             <div className="grid grid-cols-3 gap-3">
               <div className="col-span-1">
                 <label className="block text-[11px] font-semibold text-slate-400 uppercase tracking-wide mb-1.5 ml-1">
-                  Qty
+                  Qty {isSelectedBundle && <span className="text-purple-400 font-normal lowercase">(paket)</span>}
                 </label>
                 <input 
                   type="number" 
@@ -315,7 +418,7 @@ export const TransaksiView: React.FC<TransaksiViewProps> = ({
                   value={keterangan}
                   onChange={e => setKeterangan(e.target.value)}
                   className="w-full bg-slate-900/50 border border-white/10 text-white text-sm rounded-xl focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 block p-3.5 outline-none transition-all placeholder-slate-600" 
-                  placeholder="Cth: Restock / Retur..."
+                  placeholder="Cth: Penjualan / Proyek Kantor..."
                 />
               </div>
             </div>
@@ -363,12 +466,21 @@ export const TransaksiView: React.FC<TransaksiViewProps> = ({
                   if (item.type === 'Keluar') { textClass = 'text-rose-400'; sign = '-'; }
                   if (item.type === 'Rusak') { textClass = 'text-amber-400'; sign = '-'; }
 
+                  const isCartBundle = inventoryData.some(i => i.sku === item.sku && i.isBundle);
+
                   return (
                     <div key={item.id} className="flex items-center justify-between p-3 bg-black/20 border border-white/5 rounded-xl">
                       <div className="flex-1 overflow-hidden pr-2">
-                        <div className="text-xs font-bold text-white truncate">{item.name}</div>
+                        <div className="text-xs font-bold text-white truncate flex items-center gap-1.5">
+                          {item.name}
+                          {isCartBundle && (
+                            <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                              📦 Paket
+                            </span>
+                          )}
+                        </div>
                         <div className="text-[10px] text-slate-400 flex gap-2 mt-0.5">
-                          <span className={`${textClass} font-semibold`}>{item.type} ({sign}{item.qty})</span>
+                          <span className={`${textClass} font-semibold`}>{item.type} ({sign}{item.qty} {isCartBundle ? 'pkt' : 'unit'})</span>
                           {item.note !== '-' && (
                             <span className="truncate italic text-slate-500">"{item.note}"</span>
                           )}
@@ -401,3 +513,4 @@ export const TransaksiView: React.FC<TransaksiViewProps> = ({
     </section>
   );
 };
+

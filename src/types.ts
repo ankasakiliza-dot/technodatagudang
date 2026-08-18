@@ -1,9 +1,17 @@
+export interface BundleComponent {
+  sku: string;
+  name: string;
+  qty: number;
+}
+
 export interface InventoryItem {
   sku: string;
   name: string;
   stock: number;
   minStock: number;
   updatedAt?: string;
+  isBundle?: boolean;
+  bundleItems?: BundleComponent[];
 }
 
 export interface Transaction {
