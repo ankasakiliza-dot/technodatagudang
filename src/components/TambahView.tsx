@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { 
   Package, 
   Plus, 
@@ -9,7 +9,11 @@ import {
   Trash2, 
   AlertCircle, 
   CheckCircle2, 
-  Info 
+  Info,
+  Search,
+  X,
+  ChevronDown,
+  Check
 } from 'lucide-react';
 import { InventoryItem, AppUser, BundleComponent } from '../types';
 import { calculateBundleStock } from '../lib/bundleUtils';
@@ -44,14 +48,36 @@ export const TambahView: React.FC<TambahViewProps> = ({
   const [bundleMinStock, setBundleMinStock] = useState<number | ''>(5);
   const [bundleComponents, setBundleComponents] = useState<BundleComponent[]>([]);
   
-  // Component selector state
+  // Component selector state with search
   const [selectedCompSku, setSelectedCompSku] = useState('');
   const [selectedCompQty, setSelectedCompQty] = useState<number | ''>(1);
+  const [compSearchQuery, setCompSearchQuery] = useState('');
+  const [compDropdownOpen, setCompDropdownOpen] = useState(false);
+  const compDropdownRef = useRef<HTMLDivElement>(null);
 
   const [sessionItems, setSessionItems] = useState<InventoryItem[]>([]);
 
   // List of items eligible to be added as bundle components (non-bundles)
   const eligibleComponents = inventoryData.filter(i => !i.isBundle);
+
+  // Filtered components based on search query
+  const filteredEligibleComponents = eligibleComponents.filter(item => {
+    if (!compSearchQuery.trim()) return true;
+    const q = compSearchQuery.toLowerCase();
+    return item.sku.toLowerCase().includes(q) || item.name.toLowerCase().includes(q);
+  });
+
+  const selectedComponentObj = eligibleComponents.find(i => i.sku === selectedCompSku);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (compDropdownRef.current && !compDropdownRef.current.contains(e.target as Node)) {
+        setCompDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   // Calculate live capacity for currently configured bundle
   const mockBundle: InventoryItem = {
@@ -403,23 +429,138 @@ export const TambahView: React.FC<TambahViewProps> = ({
                   </span>
                 </div>
 
+                {/* Searchable Component Selector */}
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  <div className="sm:col-span-2">
-                    <label className="block text-[11px] font-semibold text-slate-400 uppercase tracking-wide mb-1.5 ml-1">
-                      Pilih Barang
-                    </label>
-                    <select
-                      value={selectedCompSku}
-                      onChange={e => setSelectedCompSku(e.target.value)}
-                      className="w-full bg-slate-900 border border-white/10 text-white text-sm rounded-xl focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 block p-3.5 outline-none transition-all"
-                    >
-                      <option value="">-- Pilih Barang dari Gudang --</option>
-                      {eligibleComponents.map(item => (
-                        <option key={item.sku} value={item.sku}>
-                          {item.name} ({item.sku}) — Sisa Stok: {item.stock}
-                        </option>
-                      ))}
-                    </select>
+                  <div className="sm:col-span-2 relative" ref={compDropdownRef}>
+                    <div className="flex justify-between items-center mb-1.5 ml-1">
+                      <label className="block text-[11px] font-semibold text-slate-300 uppercase tracking-wide">
+                        Cari & Pilih Barang Komponen
+                      </label>
+                      {selectedComponentObj && (
+                        <span className="text-[10px] text-purple-300 font-semibold">
+                          Terpilih: {selectedComponentObj.sku}
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-purple-400">
+                        <Search size={16} />
+                      </div>
+                      <input
+                        type="text"
+                        value={compSearchQuery || (selectedComponentObj && !compDropdownOpen ? `${selectedComponentObj.name} (${selectedComponentObj.sku})` : '')}
+                        onFocus={() => {
+                          setCompDropdownOpen(true);
+                          if (selectedComponentObj && !compSearchQuery) {
+                            setCompSearchQuery('');
+                          }
+                        }}
+                        onChange={e => {
+                          setCompSearchQuery(e.target.value);
+                          setCompDropdownOpen(true);
+                        }}
+                        placeholder="Ketik SKU atau nama barang untuk mencari..."
+                        className="w-full bg-slate-900/90 border border-white/10 text-white text-sm rounded-xl focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 block pl-10 pr-10 p-3.5 outline-none transition-all placeholder-slate-500 font-medium"
+                      />
+                      
+                      {/* Clear / Toggle Dropdown Button */}
+                      <div className="absolute inset-y-0 right-0 pr-3 flex items-center gap-1">
+                        {(compSearchQuery || selectedCompSku) && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSelectedCompSku('');
+                              setCompSearchQuery('');
+                              setCompDropdownOpen(false);
+                            }}
+                            className="p-1 text-slate-400 hover:text-white rounded-md hover:bg-white/10 transition-colors"
+                            title="Hapus pilihan"
+                          >
+                            <X size={14} />
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => setCompDropdownOpen(!compDropdownOpen)}
+                          className="p-1 text-slate-400 hover:text-white rounded-md hover:bg-white/10 transition-colors"
+                          title="Buka daftar barang"
+                        >
+                          <ChevronDown size={14} className={compDropdownOpen ? 'rotate-180 transition-transform' : 'transition-transform'} />
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Search Results Dropdown Menu */}
+                    {compDropdownOpen && (
+                      <div className="absolute z-50 left-0 right-0 mt-2 bg-slate-900 border border-purple-500/30 rounded-2xl shadow-2xl overflow-hidden backdrop-blur-xl modal-content-enter">
+                        <div className="px-3.5 py-2 bg-purple-950/40 border-b border-white/5 flex items-center justify-between text-[11px] text-purple-200">
+                          <span className="font-semibold">Daftar Barang Gudang</span>
+                          <span className="text-[10px] text-slate-400">
+                            {filteredEligibleComponents.length} barang ditemukan
+                          </span>
+                        </div>
+
+                        <div className="max-h-56 overflow-y-auto custom-scrollbar divide-y divide-white/5">
+                          {filteredEligibleComponents.length === 0 ? (
+                            <div className="p-4 text-center text-xs text-slate-400">
+                              <p className="font-semibold text-slate-300">Tidak ada barang yang cocok</p>
+                              <p className="text-[10px] text-slate-500 mt-0.5">Coba cari dengan kata kunci SKU atau nama lain</p>
+                            </div>
+                          ) : (
+                            filteredEligibleComponents.map(item => {
+                              const isSelected = selectedCompSku === item.sku;
+                              const existingComp = bundleComponents.find(c => c.sku === item.sku);
+
+                              return (
+                                <button
+                                  key={item.sku}
+                                  type="button"
+                                  onClick={() => {
+                                    setSelectedCompSku(item.sku);
+                                    setCompSearchQuery('');
+                                    setCompDropdownOpen(false);
+                                  }}
+                                  className={`w-full px-4 py-3 text-left flex items-center justify-between hover:bg-purple-600/15 transition-colors ${
+                                    isSelected ? 'bg-purple-600/25' : ''
+                                  }`}
+                                >
+                                  <div className="flex items-center gap-3">
+                                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-xs shrink-0 ${
+                                      isSelected 
+                                        ? 'bg-purple-500 text-white' 
+                                        : 'bg-slate-800 text-slate-300 border border-white/5'
+                                    }`}>
+                                      {isSelected ? <Check size={14} /> : <Package size={14} />}
+                                    </div>
+                                    <div>
+                                      <div className="text-sm font-semibold text-white flex items-center gap-2">
+                                        {item.name}
+                                        {existingComp && (
+                                          <span className="text-[9px] px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-300 border border-purple-500/30 font-mono">
+                                            Di paket: {existingComp.qty}x
+                                          </span>
+                                        )}
+                                      </div>
+                                      <div className="text-[10px] text-slate-400 font-mono mt-0.5">
+                                        SKU: <span className="text-slate-300">{item.sku}</span>
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  <div className="text-right shrink-0">
+                                    <span className={`text-xs font-bold ${item.stock > 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                                      Stok: {item.stock}
+                                    </span>
+                                    <div className="text-[9px] text-slate-400">unit</div>
+                                  </div>
+                                </button>
+                              );
+                            })
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   <div>
@@ -432,13 +573,24 @@ export const TambahView: React.FC<TambahViewProps> = ({
                         min="1"
                         value={selectedCompQty}
                         onChange={e => setSelectedCompQty(e.target.value ? parseInt(e.target.value) : '')}
-                        className="w-full bg-slate-900 border border-white/10 text-white text-sm rounded-xl focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 block p-3.5 outline-none transition-all text-center" 
+                        onKeyDown={e => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            handleAddComponent();
+                          }
+                        }}
+                        className="w-full bg-slate-900/90 border border-white/10 text-white text-sm rounded-xl focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 block p-3.5 outline-none transition-all text-center font-bold" 
                         placeholder="1"
                       />
                       <button
                         type="button"
                         onClick={handleAddComponent}
-                        className="px-4 bg-purple-600 hover:bg-purple-500 text-white font-bold rounded-xl transition-all active:scale-95 flex items-center justify-center shrink-0 shadow-md shadow-purple-600/25"
+                        disabled={!selectedCompSku}
+                        className={`px-4 font-bold rounded-xl transition-all active:scale-95 flex items-center justify-center shrink-0 shadow-md ${
+                          selectedCompSku 
+                            ? 'bg-purple-600 hover:bg-purple-500 text-white shadow-purple-600/25 cursor-pointer' 
+                            : 'bg-purple-600/40 text-purple-300/60 cursor-not-allowed'
+                        }`}
                         title="Tambahkan ke Paket"
                       >
                         <Plus size={18} strokeWidth={2.5} />
@@ -446,6 +598,28 @@ export const TambahView: React.FC<TambahViewProps> = ({
                     </div>
                   </div>
                 </div>
+
+                {/* Selected Item Notification Badge if selected */}
+                {selectedComponentObj && (
+                  <div className="p-3 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-between">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-2 h-2 rounded-full bg-purple-400 animate-pulse"></div>
+                      <div className="text-xs text-purple-200">
+                        Siap ditambahkan: <span className="font-bold text-white">{selectedComponentObj.name}</span> (<span className="font-mono text-purple-300">{selectedComponentObj.sku}</span>) — Sisa stok gudang: <strong className="text-emerald-400">{selectedComponentObj.stock} unit</strong>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedCompSku('');
+                        setCompSearchQuery('');
+                      }}
+                      className="text-[10px] text-purple-300 hover:text-white underline ml-2 shrink-0"
+                    >
+                      Batal Pilih
+                    </button>
+                  </div>
+                )}
 
                 {/* List of Added Components */}
                 {bundleComponents.length > 0 ? (
