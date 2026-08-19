@@ -95,15 +95,6 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
             )}
           </button>
         </form>
-
-        <div className="mt-6 pt-4 border-t border-white/5 text-center text-[11px] text-slate-400">
-          <p>Default Login Demo:</p>
-          <div className="flex justify-center gap-3 mt-1 font-mono text-[10px] text-slate-300">
-            <span>Admin: admin / admin</span>
-            <span>•</span>
-            <span>Staf: staf / password</span>
-          </div>
-        </div>
       </div>
     </section>
   );

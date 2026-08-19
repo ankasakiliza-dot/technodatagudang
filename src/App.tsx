@@ -12,7 +12,7 @@ import {
   orderBy,
   testConnection 
 } from './lib/firebase';
-import { InventoryItem, Transaction, AppUser, CartItem, ViewType } from './types';
+import { InventoryItem, Transaction, AppUser, CartItem, ViewType, UserRole } from './types';
 import { Header } from './components/Header';
 import { Navigation } from './components/Navigation';
 import { LoginScreen } from './components/LoginScreen';
@@ -26,12 +26,13 @@ import { Modals } from './components/Modals';
 import { ImportModal } from './components/ImportModal';
 import { ToastContainer, ToastItem } from './components/ToastContainer';
 
-const INITIAL_DEMO_USERS: AppUser[] = [
+const INITIAL_USERS: AppUser[] = [
+  { username: 'teknisi', password: 'password', role: 'teknisi' },
   { username: 'admin', password: 'admin', role: 'admin' },
   { username: 'staf', password: 'password', role: 'staf' }
 ];
 
-const INITIAL_DEMO_INVENTORY: InventoryItem[] = [
+const INITIAL_INVENTORY: InventoryItem[] = [
   { sku: 'ITM-001', name: 'Laptop ASUS ROG Strix', stock: 12, minStock: 5 },
   { sku: 'ITM-002', name: 'Mouse Logitech G502', stock: 4, minStock: 5 },
   { sku: 'ITM-003', name: 'Keyboard Mechanical Keychron', stock: 0, minStock: 3 },
@@ -65,6 +66,7 @@ export default function App() {
   // Modals state
   const [confirmModal, setConfirmModal] = useState<{ open: boolean; title: string; desc: string; onConfirm: () => void } | null>(null);
   const [editItemModal, setEditItemModal] = useState<{ open: boolean; item: InventoryItem | null } | null>(null);
+  const [editTxModal, setEditTxModal] = useState<{ open: boolean; tx: Transaction | null } | null>(null);
   const [addUserModalOpen, setAddUserModalOpen] = useState(false);
   const [changePasswordModalOpen, setChangePasswordModalOpen] = useState(false);
   const [integrationModalOpen, setIntegrationModalOpen] = useState(false);
@@ -95,9 +97,18 @@ export default function App() {
         const usersCol = collection(db, 'users');
         const userSnapshot = await getDocs(usersCol);
         if (userSnapshot.empty) {
-          // Seed initial demo users
-          for (const user of INITIAL_DEMO_USERS) {
+          for (const user of INITIAL_USERS) {
             await setDoc(doc(db, 'users', user.username), user);
+          }
+        } else {
+          // Ensure 'teknisi' user is available if not present
+          const hasTeknisi = userSnapshot.docs.some(d => d.id === 'teknisi' || d.data().role === 'teknisi');
+          if (!hasTeknisi) {
+            await setDoc(doc(db, 'users', 'teknisi'), {
+              username: 'teknisi',
+              password: 'password',
+              role: 'teknisi'
+            });
           }
         }
 
@@ -105,7 +116,7 @@ export default function App() {
         const inventoryCol = collection(db, 'inventory');
         const invSnapshot = await getDocs(inventoryCol);
         if (invSnapshot.empty) {
-          for (const item of INITIAL_DEMO_INVENTORY) {
+          for (const item of INITIAL_INVENTORY) {
             await setDoc(doc(db, 'inventory', item.sku), item);
           }
         }
@@ -419,7 +430,146 @@ export default function App() {
     }
   };
 
-  const handleSaveNewUser = async (username: string, pass: string, role: 'admin' | 'staf') => {
+  const handleOpenEditTx = (tx: Transaction) => {
+    if (currentUser?.role !== 'teknisi') {
+      showToast('Hanya Teknisi yang memiliki hak akses untuk mengedit transaksi!', 'error');
+      return;
+    }
+    setEditTxModal({ open: true, tx });
+  };
+
+  const handleSaveEditTx = async (
+    oldTx: Transaction,
+    updated: { type: 'Masuk' | 'Keluar' | 'Rusak'; qty: number; date: string; note: string },
+    adjustStock: boolean
+  ) => {
+    if (!currentUser) return;
+    if (currentUser.role !== 'teknisi') {
+      showToast('Hanya Teknisi yang memiliki hak akses untuk mengoreksi transaksi!', 'error');
+      return;
+    }
+    try {
+      const txId = oldTx.id ? String(oldTx.id) : null;
+      if (!txId) {
+        showToast('ID transaksi tidak ditemukan', 'error');
+        return;
+      }
+
+      const updatedTxData: Transaction = {
+        ...oldTx,
+        type: updated.type,
+        qty: updated.qty,
+        date: updated.date,
+        note: updated.note,
+        editedAt: new Date().toISOString(),
+        editedBy: `${currentUser.username} (${currentUser.role})`
+      };
+
+      // 1. Update Transaction Doc in Firestore
+      await setDoc(doc(db, 'transactions', txId), updatedTxData);
+
+      // 2. If adjustStock is requested, calculate stock delta:
+      if (adjustStock && oldTx.sku) {
+        const invItem = inventoryData.find(i => i.sku === oldTx.sku);
+        if (invItem) {
+          const oldDelta = oldTx.type === 'Masuk' ? oldTx.qty : -oldTx.qty;
+          const newDelta = updated.type === 'Masuk' ? updated.qty : -updated.qty;
+          const netAdjustment = newDelta - oldDelta;
+
+          if (netAdjustment !== 0) {
+            if (invItem.isBundle && invItem.bundleItems && invItem.bundleItems.length > 0) {
+              for (const comp of invItem.bundleItems) {
+                const compItem = inventoryData.find(i => i.sku === comp.sku);
+                if (compItem) {
+                  const compReq = comp.qty > 0 ? comp.qty : 1;
+                  const compAdjustment = netAdjustment * compReq;
+                  const newCompStock = Math.max(0, compItem.stock + compAdjustment);
+                  await setDoc(doc(db, 'inventory', comp.sku), {
+                    ...compItem,
+                    stock: newCompStock
+                  });
+                }
+              }
+            } else {
+              const newStock = Math.max(0, invItem.stock + netAdjustment);
+              await setDoc(doc(db, 'inventory', oldTx.sku), {
+                ...invItem,
+                stock: newStock
+              });
+            }
+          }
+        }
+      }
+
+      showToast(`Transaksi ${oldTx.sku} berhasil dikoreksi`, 'success');
+      setEditTxModal(null);
+    } catch (err) {
+      console.error(err);
+      showToast('Gagal mengoreksi transaksi di server', 'error');
+    }
+  };
+
+  const handlePromptDeleteTx = (tx: Transaction) => {
+    if (!currentUser) return;
+    if (currentUser.role !== 'teknisi') {
+      showToast('Hanya akun Teknisi yang berhak menghapus transaksi!', 'error');
+      return;
+    }
+
+    setConfirmModal({
+      open: true,
+      title: 'Hapus Transaksi Salah Input?',
+      desc: `Hapus transaksi ${tx.type} (${tx.qty} unit ${tx.name})? Stok gudang akan otomatis disinkronkan kembali.`,
+      onConfirm: async () => {
+        try {
+          const txId = tx.id ? String(tx.id) : null;
+          if (txId) {
+            await deleteDoc(doc(db, 'transactions', txId));
+          }
+
+          // Revert stock impact:
+          if (tx.sku) {
+            const invItem = inventoryData.find(i => i.sku === tx.sku);
+            if (invItem) {
+              const revertDelta = tx.type === 'Masuk' ? -tx.qty : tx.qty;
+              if (invItem.isBundle && invItem.bundleItems && invItem.bundleItems.length > 0) {
+                for (const comp of invItem.bundleItems) {
+                  const compItem = inventoryData.find(i => i.sku === comp.sku);
+                  if (compItem) {
+                    const compReq = comp.qty > 0 ? comp.qty : 1;
+                    const compDelta = revertDelta * compReq;
+                    const newCompStock = Math.max(0, compItem.stock + compDelta);
+                    await setDoc(doc(db, 'inventory', comp.sku), {
+                      ...compItem,
+                      stock: newCompStock
+                    });
+                  }
+                }
+              } else {
+                const newStock = Math.max(0, invItem.stock + revertDelta);
+                await setDoc(doc(db, 'inventory', tx.sku), {
+                  ...invItem,
+                  stock: newStock
+                });
+              }
+            }
+          }
+
+          showToast(`Transaksi ${tx.sku} berhasil dihapus & stok dipulihkan`, 'success');
+        } catch (err) {
+          console.error(err);
+          showToast('Gagal menghapus transaksi', 'error');
+        }
+      }
+    });
+  };
+
+  const handleSaveNewUser = async (username: string, pass: string, role: UserRole) => {
+    if (currentUser?.role !== 'teknisi') {
+      showToast('Hanya akun Teknisi yang memiliki hak akses menambahkan anggota!', 'error');
+      return;
+    }
+
     if (usersData.some(u => u.username.toLowerCase() === username.toLowerCase())) {
       showToast('Username sudah terdaftar!', 'error');
       return;
@@ -428,7 +578,7 @@ export default function App() {
     try {
       const newUser: AppUser = { username, password: pass, role };
       await setDoc(doc(db, 'users', username), newUser);
-      showToast(`Anggota baru (${username}) berhasil ditambahkan`, 'success');
+      showToast(`Anggota baru (${username} - ${role}) berhasil ditambahkan`, 'success');
       setAddUserModalOpen(false);
     } catch (err) {
       showToast('Gagal menambahkan pengguna', 'error');
@@ -436,6 +586,11 @@ export default function App() {
   };
 
   const handlePromptDeleteUser = (username: string) => {
+    if (currentUser?.role !== 'teknisi') {
+      showToast('Hanya akun Teknisi yang memiliki hak akses menghapus anggota!', 'error');
+      return;
+    }
+
     if (currentUser?.username === username) {
       showToast('Anda tidak dapat menghapus akun Anda sendiri!', 'error');
       return;
@@ -527,8 +682,11 @@ export default function App() {
               <RiwayatView 
                 transactions={transactions}
                 usersData={usersData}
+                currentUser={currentUser}
                 onSwitchView={setCurrentView}
                 onOpenImportModal={handleOpenImportModal}
+                onOpenEditTx={handleOpenEditTx}
+                onPromptDeleteTx={handlePromptDeleteTx}
                 showToast={showToast}
               />
             )}
@@ -587,6 +745,9 @@ export default function App() {
             editItemModal={editItemModal}
             onCloseEditModal={() => setEditItemModal(null)}
             onSaveEdit={handleSaveEdit}
+            editTxModal={editTxModal}
+            onCloseEditTxModal={() => setEditTxModal(null)}
+            onSaveEditTx={handleSaveEditTx}
             addUserModalOpen={addUserModalOpen}
             onCloseAddUserModal={() => setAddUserModalOpen(false)}
             onSaveNewUser={handleSaveNewUser}

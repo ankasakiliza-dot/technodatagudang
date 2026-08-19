@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { 
   ChevronLeft, 
   Download, 
-  Upload,
+  Upload, 
   FileText, 
   Search, 
   Calendar, 
@@ -11,8 +11,12 @@ import {
   ArrowUpRight, 
   ArrowDownRight, 
   AlertTriangle, 
-  FileCheck,
-  Plus
+  FileCheck, 
+  Plus, 
+  Pencil, 
+  Trash2, 
+  Wrench, 
+  ShieldCheck 
 } from 'lucide-react';
 import { Transaction, AppUser, ViewType } from '../types';
 import { downloadTransactionsCSV, downloadTransactionsPDF } from '../lib/exportUtils';
@@ -20,16 +24,22 @@ import { downloadTransactionsCSV, downloadTransactionsPDF } from '../lib/exportU
 interface RiwayatViewProps {
   transactions: Transaction[];
   usersData: AppUser[];
+  currentUser: AppUser | null;
   onSwitchView: (view: ViewType) => void;
   onOpenImportModal?: (tab?: 'inventory' | 'transactions') => void;
+  onOpenEditTx?: (tx: Transaction) => void;
+  onPromptDeleteTx?: (tx: Transaction) => void;
   showToast: (msg: string, type?: 'success' | 'error') => void;
 }
 
 export const RiwayatView: React.FC<RiwayatViewProps> = ({
   transactions,
   usersData,
+  currentUser,
   onSwitchView,
   onOpenImportModal,
+  onOpenEditTx,
+  onPromptDeleteTx,
   showToast
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -37,6 +47,8 @@ export const RiwayatView: React.FC<RiwayatViewProps> = ({
   const [endDate, setEndDate] = useState('');
   const [selectedUser, setSelectedUser] = useState('all');
   const [activeHistoryFilter, setActiveHistoryFilter] = useState<'semua' | 'masuk' | 'keluar' | 'rusak' | 'opname'>('semua');
+
+  const canManageTransactions = currentUser?.role === 'teknisi';
 
   const filteredTransactions = transactions.filter(tx => {
     const isOpname = tx.note && (tx.note.includes('Opname') || tx.note.includes('Selisih'));
@@ -102,7 +114,16 @@ export const RiwayatView: React.FC<RiwayatViewProps> = ({
             >
               <ChevronLeft size={18} strokeWidth={2.5} />
             </button>
-            <h2 className="text-lg font-bold text-white">Riwayat & Filter</h2>
+            <div>
+              <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                Riwayat & Koreksi
+                {canManageTransactions && (
+                  <span className="text-[10px] px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider flex items-center gap-1 bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                    <Wrench size={11} /> Akses Khusus Teknisi
+                  </span>
+                )}
+              </h2>
+            </div>
           </div>
           <div className="flex gap-2">
             <button 
@@ -135,6 +156,16 @@ export const RiwayatView: React.FC<RiwayatViewProps> = ({
           </div>
         </div>
 
+        {/* Technician/Admin notice bar if authorized */}
+        {canManageTransactions && (
+          <div className="px-5 py-2 bg-purple-500/10 border-b border-purple-500/20 flex items-center justify-between text-xs text-purple-200">
+            <span className="flex items-center gap-1.5">
+              <Wrench size={13} className="text-purple-400 shrink-0" />
+              <span>Gunakan tombol <strong>Edit</strong> & <strong>Hapus</strong> pada setiap baris untuk memperbaiki salah input transaksi.</span>
+            </span>
+          </div>
+        )}
+
         {/* Filters */}
         <div className="px-5 py-3 border-b border-white/10 bg-white/[0.01]">
           <div className="flex flex-col sm:flex-row gap-3">
@@ -144,7 +175,7 @@ export const RiwayatView: React.FC<RiwayatViewProps> = ({
                 type="text" 
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
-                placeholder="Cari pencatatan..." 
+                placeholder="Cari transaksi berdasarkan nama, SKU, atau catatan..." 
                 className="w-full bg-slate-900/50 border border-white/10 text-xs rounded-xl focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 block pl-9 pr-4 py-2.5 placeholder-slate-400 text-white transition-all outline-none"
               />
             </div>
@@ -244,7 +275,7 @@ export const RiwayatView: React.FC<RiwayatViewProps> = ({
               const timeStr = `${dateObj.getHours().toString().padStart(2, '0')}:${dateObj.getMinutes().toString().padStart(2, '0')}`;
 
               return (
-                <div key={tx.id} className="flex flex-col p-4 rounded-2xl bg-slate-800/50 border border-white/5 hover:bg-slate-800 transition-colors">
+                <div key={tx.id || `${tx.sku}-${tx.date}`} className="flex flex-col p-4 rounded-2xl bg-slate-800/50 border border-white/5 hover:bg-slate-800 transition-colors">
                   <div className="flex items-start justify-between mb-2">
                     <div className="flex items-center gap-3">
                       <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${iconColor}`}>
@@ -266,7 +297,12 @@ export const RiwayatView: React.FC<RiwayatViewProps> = ({
                   <div className="flex items-center justify-between text-[11px] text-slate-400 pt-3 border-t border-white/5">
                     <div className="flex items-center gap-1.5">
                       <UserIcon size={12} />
-                      {tx.user}
+                      <span className="capitalize">{tx.user}</span>
+                      {tx.editedBy && (
+                        <span className="text-[10px] px-1.5 py-0.2 rounded bg-purple-500/20 text-purple-300 border border-purple-500/20 font-medium">
+                          (Diedit: {tx.editedBy})
+                        </span>
+                      )}
                     </div>
                     <div className="flex items-center gap-1.5 text-right">
                       {dateStr} • {timeStr}
@@ -277,6 +313,26 @@ export const RiwayatView: React.FC<RiwayatViewProps> = ({
                   {tx.note && tx.note !== '-' && (
                     <div className="mt-2 text-[11px] text-slate-300 bg-black/20 p-2 rounded-lg italic">
                       "{tx.note}"
+                    </div>
+                  )}
+
+                  {/* Action buttons for Teknisi and Admin */}
+                  {canManageTransactions && (
+                    <div className="flex items-center justify-end gap-2 pt-2.5 mt-2.5 border-t border-white/5">
+                      <button
+                        onClick={() => onOpenEditTx?.(tx)}
+                        className="px-2.5 py-1 rounded-lg bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 text-[11px] font-semibold transition-all border border-purple-500/20 active:scale-95 flex items-center gap-1"
+                        title="Koreksi data transaksi ini"
+                      >
+                        <Pencil size={12} /> Edit Transaksi
+                      </button>
+                      <button
+                        onClick={() => onPromptDeleteTx?.(tx)}
+                        className="px-2.5 py-1 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 text-[11px] font-semibold transition-all border border-rose-500/20 active:scale-95 flex items-center gap-1"
+                        title="Hapus transaksi yang salah input"
+                      >
+                        <Trash2 size={12} /> Hapus
+                      </button>
                     </div>
                   )}
                 </div>

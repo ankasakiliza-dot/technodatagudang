@@ -14,6 +14,14 @@ export interface InventoryItem {
   bundleItems?: BundleComponent[];
 }
 
+export type UserRole = 'admin' | 'teknisi' | 'staf';
+
+export interface AppUser {
+  username: string;
+  password?: string;
+  role: UserRole;
+}
+
 export interface Transaction {
   id?: string | number;
   date: string;
@@ -23,12 +31,8 @@ export interface Transaction {
   qty: number;
   note: string;
   user: string;
-}
-
-export interface AppUser {
-  username: string;
-  password?: string;
-  role: 'admin' | 'staf';
+  editedAt?: string;
+  editedBy?: string;
 }
 
 export interface CartItem {

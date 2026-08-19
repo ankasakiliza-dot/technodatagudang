@@ -1,5 +1,5 @@
 import React from 'react';
-import { KeyRound, Users, UserPlus, LogOut, Trash2, ShieldCheck, User, Palette, Check } from 'lucide-react';
+import { KeyRound, Users, UserPlus, LogOut, Trash2, ShieldCheck, User, Palette, Check, Wrench } from 'lucide-react';
 import { AppUser } from '../types';
 
 interface AkunViewProps {
@@ -33,6 +33,7 @@ export const AkunView: React.FC<AkunViewProps> = ({
   if (!currentUser) return null;
 
   const isAdmin = currentUser.role === 'admin';
+  const isTeknisi = currentUser.role === 'teknisi';
   const initial = currentUser.username.charAt(0).toUpperCase();
 
   return (
@@ -41,16 +42,36 @@ export const AkunView: React.FC<AkunViewProps> = ({
         <div className="absolute -left-10 -bottom-10 w-40 h-40 bg-blue-500/10 rounded-full blur-3xl"></div>
 
         {/* Avatar */}
-        <div className="w-24 h-24 rounded-full bg-gradient-to-br from-blue-600 to-cyan-400 flex items-center justify-center text-4xl font-black text-white shadow-lg shadow-blue-500/30 mb-4 relative z-10">
+        <div className={`w-24 h-24 rounded-full bg-gradient-to-br ${
+          isTeknisi 
+            ? 'from-purple-600 to-indigo-400 shadow-purple-500/30' 
+            : isAdmin 
+              ? 'from-blue-600 to-cyan-400 shadow-blue-500/30' 
+              : 'from-slate-600 to-slate-400 shadow-slate-500/30'
+        } flex items-center justify-center text-4xl font-black text-white shadow-lg mb-4 relative z-10`}>
           {initial}
         </div>
 
         <h3 className="text-2xl font-bold text-white capitalize mb-1 relative z-10">
           {currentUser.username}
         </h3>
-        <p className="text-xs text-slate-400 mb-6 uppercase tracking-widest font-semibold relative z-10">
-          {isAdmin ? 'Administrator' : 'Staf Gudang'}
-        </p>
+        <div className="mb-6 relative z-10 flex items-center gap-1.5">
+          {isTeknisi && (
+            <span className="text-[11px] px-2.5 py-1 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30 font-bold uppercase tracking-wider flex items-center gap-1">
+              <Wrench size={12} /> Teknisi (Akses Manajemen & Koreksi)
+            </span>
+          )}
+          {isAdmin && (
+            <span className="text-[11px] px-2.5 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 font-bold uppercase tracking-wider flex items-center gap-1">
+              <ShieldCheck size={12} /> Administrator
+            </span>
+          )}
+          {!isAdmin && !isTeknisi && (
+            <span className="text-[11px] px-2.5 py-1 rounded-full bg-slate-800 text-slate-300 border border-white/10 font-bold uppercase tracking-wider flex items-center gap-1">
+              <User size={12} /> Staf Gudang
+            </span>
+          )}
+        </div>
 
         {/* Theme Selector Section */}
         {onSelectTheme && (
@@ -96,39 +117,48 @@ export const AkunView: React.FC<AkunViewProps> = ({
           Ubah Password
         </button>
 
-        {/* Admin User Management */}
-        {isAdmin && (
+        {/* Teknisi Only - User Management */}
+        {isTeknisi && (
           <div className="w-full max-w-sm mb-6 relative z-10">
             <div className="flex items-center justify-between mb-3 border-b border-white/10 pb-2">
               <h4 className="text-sm font-bold text-white flex items-center gap-2">
-                <Users size={16} className="text-blue-400" />
+                <Users size={16} className="text-purple-400" />
                 Manajemen Anggota
               </h4>
               <button 
                 onClick={onOpenAddUserModal} 
-                className="text-[10px] font-bold bg-blue-500/20 text-blue-400 px-3 py-1.5 rounded-lg hover:bg-blue-500/30 transition-all border border-blue-500/20 active:scale-95 flex items-center gap-1"
+                className="text-[10px] font-bold bg-purple-500/20 text-purple-300 px-3 py-1.5 rounded-lg hover:bg-purple-500/30 transition-all border border-purple-500/20 active:scale-95 flex items-center gap-1"
               >
-                <UserPlus size={12} /> Tambah
+                <UserPlus size={12} /> Tambah Anggota
               </button>
             </div>
 
             <div className="space-y-2 max-h-48 overflow-y-auto custom-scrollbar pr-2">
               {usersData.map(u => {
                 const userIsAdmin = u.role === 'admin';
+                const userIsTeknisi = u.role === 'teknisi';
                 const isMe = u.username === currentUser.username;
 
                 return (
                   <div key={u.username} className="flex items-center justify-between p-2.5 rounded-xl bg-slate-800/50 border border-white/5">
                     <div className="flex items-center gap-3">
-                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${userIsAdmin ? 'text-amber-400 bg-amber-500/20' : 'text-slate-400 bg-slate-700/50'}`}>
-                        {userIsAdmin ? <ShieldCheck size={14} /> : <User size={14} />}
+                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
+                        userIsTeknisi 
+                          ? 'text-purple-400 bg-purple-500/20' 
+                          : userIsAdmin 
+                            ? 'text-amber-400 bg-amber-500/20' 
+                            : 'text-slate-400 bg-slate-700/50'
+                      }`}>
+                        {userIsTeknisi ? <Wrench size={14} /> : userIsAdmin ? <ShieldCheck size={14} /> : <User size={14} />}
                       </div>
                       <div>
                         <div className="text-sm font-bold text-white flex items-center gap-1.5">
-                          {u.username} {isMe && <span className="text-[9px] text-blue-400">(Anda)</span>}
+                          {u.username} {isMe && <span className="text-[9px] text-purple-400 font-semibold">(Anda)</span>}
                         </div>
                         <div className="mt-0.5">
-                          {userIsAdmin ? (
+                          {userIsTeknisi ? (
+                            <span className="text-[9px] px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-300 border border-purple-500/20 font-bold uppercase tracking-wider">Teknisi</span>
+                          ) : userIsAdmin ? (
                             <span className="text-[9px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-400 border border-amber-500/20 font-bold uppercase tracking-wider">Admin</span>
                           ) : (
                             <span className="text-[9px] px-1.5 py-0.5 rounded bg-slate-700 text-slate-300 font-bold uppercase tracking-wider">Staf</span>

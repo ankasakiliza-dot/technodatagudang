@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Trash2, 
   Pencil, 
@@ -13,11 +13,16 @@ import {
   ExternalLink,
   Zap,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  FileEdit,
+  ArrowUpRight,
+  ArrowDownRight,
+  AlertTriangle,
+  Layers,
+  Wrench
 } from 'lucide-react';
-import { InventoryItem } from '../types';
+import { InventoryItem, Transaction, UserRole } from '../types';
 import { APPS_SCRIPT_CODE, DEFAULT_APPS_SCRIPT_URL, getBloggerPageHtml, copyToClipboard } from '../lib/integrationExport';
-
 
 interface ModalsProps {
   confirmModal: { open: boolean; title: string; desc: string; onConfirm: () => void } | null;
@@ -27,9 +32,17 @@ interface ModalsProps {
   onCloseEditModal: () => void;
   onSaveEdit: (oldSku: string, newSku: string, newName: string, newMinStock: number) => void;
 
+  editTxModal?: { open: boolean; tx: Transaction | null } | null;
+  onCloseEditTxModal?: () => void;
+  onSaveEditTx?: (
+    oldTx: Transaction, 
+    updatedTx: { type: 'Masuk' | 'Keluar' | 'Rusak'; qty: number; date: string; note: string },
+    adjustStock: boolean
+  ) => void;
+
   addUserModalOpen: boolean;
   onCloseAddUserModal: () => void;
-  onSaveNewUser: (username: string, pass: string, role: 'admin' | 'staf') => void;
+  onSaveNewUser: (username: string, pass: string, role: UserRole) => void;
 
   changePasswordModalOpen: boolean;
   onCloseChangePasswordModal: () => void;
@@ -46,6 +59,9 @@ export const Modals: React.FC<ModalsProps> = ({
   editItemModal,
   onCloseEditModal,
   onSaveEdit,
+  editTxModal,
+  onCloseEditTxModal,
+  onSaveEditTx,
   addUserModalOpen,
   onCloseAddUserModal,
   onSaveNewUser,
@@ -61,7 +77,7 @@ export const Modals: React.FC<ModalsProps> = ({
   const [editName, setEditName] = useState(editItemModal?.item?.name || '');
   const [editMinStock, setEditMinStock] = useState<number | ''>(editItemModal?.item?.minStock || 5);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (editItemModal?.item) {
       setEditSku(editItemModal.item.sku);
       setEditName(editItemModal.item.name);
@@ -69,10 +85,34 @@ export const Modals: React.FC<ModalsProps> = ({
     }
   }, [editItemModal]);
 
+  // State for Edit Transaction Modal
+  const [editTxType, setEditTxType] = useState<'Masuk' | 'Keluar' | 'Rusak'>('Masuk');
+  const [editTxQty, setEditTxQty] = useState<number | ''>(1);
+  const [editTxDate, setEditTxDate] = useState('');
+  const [editTxNote, setEditTxNote] = useState('');
+  const [editTxAdjustStock, setEditTxAdjustStock] = useState(true);
+
+  useEffect(() => {
+    if (editTxModal?.tx) {
+      setEditTxType(editTxModal.tx.type);
+      setEditTxQty(editTxModal.tx.qty);
+      setEditTxNote(editTxModal.tx.note || '');
+      setEditTxAdjustStock(true);
+
+      try {
+        const d = new Date(editTxModal.tx.date);
+        const isoLocal = new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+        setEditTxDate(isoLocal);
+      } catch {
+        setEditTxDate(new Date().toISOString().slice(0, 16));
+      }
+    }
+  }, [editTxModal]);
+
   // State for Add User Modal
   const [newUsername, setNewUsername] = useState('');
   const [newUserPassword, setNewUserPassword] = useState('');
-  const [newUserRole, setNewUserRole] = useState<'admin' | 'staf'>('staf');
+  const [newUserRole, setNewUserRole] = useState<UserRole>('staf');
 
   // State for Change Password Modal
   const [oldPassword, setOldPassword] = useState('');
@@ -154,6 +194,28 @@ export const Modals: React.FC<ModalsProps> = ({
     if (!editItemModal?.item) return;
     const min = typeof editMinStock === 'number' ? editMinStock : parseInt(editMinStock) || 5;
     onSaveEdit(editItemModal.item.sku, editSku, editName, min);
+  };
+
+  const handleEditTxSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editTxModal?.tx || !onSaveEditTx) return;
+    const finalQty = typeof editTxQty === 'number' ? editTxQty : parseInt(editTxQty) || 1;
+    if (finalQty <= 0) {
+      showToast('Jumlah kuantitas harus lebih dari 0', 'error');
+      return;
+    }
+
+    const isoDate = editTxDate ? new Date(editTxDate).toISOString() : new Date().toISOString();
+    onSaveEditTx(
+      editTxModal.tx,
+      {
+        type: editTxType,
+        qty: finalQty,
+        date: isoDate,
+        note: editTxNote.trim() || 'Koreksi Transaksi'
+      },
+      editTxAdjustStock
+    );
   };
 
   const handleAddUserSubmit = (e: React.FormEvent) => {
@@ -326,11 +388,12 @@ export const Modals: React.FC<ModalsProps> = ({
                 </label>
                 <select 
                   value={newUserRole}
-                  onChange={e => setNewUserRole(e.target.value as 'admin' | 'staf')}
-                  className="w-full text-center bg-slate-900 border border-white/10 text-white text-sm rounded-xl focus:ring-2 focus:ring-emerald-500/50 block p-3 outline-none transition-all appearance-none cursor-pointer"
+                  onChange={e => setNewUserRole(e.target.value as UserRole)}
+                  className="w-full text-center bg-slate-900 border border-white/10 text-white text-sm rounded-xl focus:ring-2 focus:ring-purple-500/50 block p-3 outline-none transition-all appearance-none cursor-pointer"
                 >
-                  <option value="staf">Staf Gudang (Terbatas)</option>
-                  <option value="admin">Administrator (Penuh)</option>
+                  <option value="staf">Staf Gudang (Pencatatan)</option>
+                  <option value="teknisi">Teknisi (Akses Manajemen Anggota & Koreksi Transaksi)</option>
+                  <option value="admin">Administrator (Pencatatan & Laporan)</option>
                 </select>
               </div>
 
@@ -344,9 +407,163 @@ export const Modals: React.FC<ModalsProps> = ({
                 </button>
                 <button 
                   type="submit" 
-                  className="flex-1 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-semibold transition-all active:scale-95 shadow-lg shadow-emerald-500/25"
+                  className="flex-1 py-3 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-sm font-semibold transition-all active:scale-95 shadow-lg shadow-purple-600/25"
                 >
                   Daftarkan
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* 3.5. Edit Transaction Modal (Teknisi) */}
+      {editTxModal && editTxModal.open && editTxModal.tx && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm modal-enter">
+          <div className="glass-panel w-full max-w-md rounded-2xl p-6 shadow-2xl modal-content-enter">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 bg-purple-500/20 text-purple-400 rounded-xl flex items-center justify-center border border-purple-500/30">
+                <FileEdit size={20} strokeWidth={2.5} />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-white">Koreksi Transaksi</h3>
+                <p className="text-[10px] font-mono text-purple-300">Hak Akses Khusus Teknisi</p>
+              </div>
+            </div>
+
+            {/* Target Item Info Badge */}
+            <div className="p-3 mb-4 rounded-xl bg-slate-900/80 border border-white/10 flex items-center justify-between">
+              <div>
+                <span className="text-[10px] font-mono uppercase bg-slate-800 text-slate-400 px-2 py-0.5 rounded border border-white/5 font-bold">
+                  {editTxModal.tx.sku}
+                </span>
+                <div className="text-sm font-bold text-white mt-1 line-clamp-1">{editTxModal.tx.name}</div>
+              </div>
+              <div className="text-right">
+                <span className="text-[10px] text-slate-400">Input awal oleh:</span>
+                <div className="text-xs font-semibold text-slate-300 capitalize">{editTxModal.tx.user || 'Sistem'}</div>
+              </div>
+            </div>
+
+            <form onSubmit={handleEditTxSubmit} className="space-y-4 mb-2">
+              {/* Tipe Transaksi */}
+              <div>
+                <label className="block text-[11px] font-semibold text-slate-400 uppercase tracking-wide mb-1.5 ml-1">
+                  Tipe Transaksi
+                </label>
+                <div className="grid grid-cols-3 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setEditTxType('Masuk')}
+                    className={`py-2.5 px-3 rounded-xl border text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
+                      editTxType === 'Masuk'
+                        ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-400 shadow-lg shadow-emerald-500/10'
+                        : 'bg-slate-900 border-white/10 text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    <ArrowDownRight size={14} /> Masuk
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setEditTxType('Keluar')}
+                    className={`py-2.5 px-3 rounded-xl border text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
+                      editTxType === 'Keluar'
+                        ? 'bg-blue-500/20 border-blue-500/50 text-blue-400 shadow-lg shadow-blue-500/10'
+                        : 'bg-slate-900 border-white/10 text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    <ArrowUpRight size={14} /> Keluar
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setEditTxType('Rusak')}
+                    className={`py-2.5 px-3 rounded-xl border text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
+                      editTxType === 'Rusak'
+                        ? 'bg-rose-500/20 border-rose-500/50 text-rose-400 shadow-lg shadow-rose-500/10'
+                        : 'bg-slate-900 border-white/10 text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    <AlertTriangle size={14} /> Rusak
+                  </button>
+                </div>
+              </div>
+
+              {/* Jumlah / Qty & Tanggal */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-400 uppercase tracking-wide mb-1.5 ml-1">
+                    Jumlah (Qty)
+                  </label>
+                  <input 
+                    type="number" 
+                    min={1}
+                    value={editTxQty}
+                    onChange={e => setEditTxQty(e.target.value ? parseInt(e.target.value) : '')}
+                    className="w-full bg-slate-900 border border-white/10 text-white text-sm rounded-xl focus:ring-2 focus:ring-purple-500/50 block p-3 outline-none transition-all font-bold" 
+                    placeholder="1" 
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-400 uppercase tracking-wide mb-1.5 ml-1">
+                    Waktu / Tanggal
+                  </label>
+                  <input 
+                    type="datetime-local" 
+                    value={editTxDate}
+                    onChange={e => setEditTxDate(e.target.value)}
+                    className="w-full bg-slate-900 border border-white/10 text-white text-xs rounded-xl focus:ring-2 focus:ring-purple-500/50 block p-3 outline-none transition-all" 
+                    required
+                  />
+                </div>
+              </div>
+
+              {/* Catatan / Alasan Koreksi */}
+              <div>
+                <label className="block text-[11px] font-semibold text-slate-400 uppercase tracking-wide mb-1.5 ml-1">
+                  Catatan / Keterangan Koreksi
+                </label>
+                <input 
+                  type="text" 
+                  value={editTxNote}
+                  onChange={e => setEditTxNote(e.target.value)}
+                  className="w-full bg-slate-900 border border-white/10 text-white text-sm rounded-xl focus:ring-2 focus:ring-purple-500/50 block p-3 outline-none transition-all placeholder-slate-600" 
+                  placeholder="Contoh: Koreksi salah ketik jumlah dari 5 ke 2" 
+                />
+              </div>
+
+              {/* Auto Stock Adjust Checkbox */}
+              <div className="p-3 rounded-xl bg-purple-500/10 border border-purple-500/20">
+                <label className="flex items-start gap-2.5 cursor-pointer select-none">
+                  <input 
+                    type="checkbox"
+                    checked={editTxAdjustStock}
+                    onChange={e => setEditTxAdjustStock(e.target.checked)}
+                    className="mt-0.5 w-4 h-4 rounded text-purple-500 focus:ring-purple-500/50 bg-slate-900 border-white/20 cursor-pointer"
+                  />
+                  <div className="text-[11px] text-purple-200 leading-snug">
+                    <span className="font-semibold text-purple-300">Sinkronkan perubahan ke stok master otomatis</span>
+                    <p className="text-[10px] text-slate-400 mt-0.5">
+                      Stok barang di gudang akan otomatis disesuaikan dengan selisih kuantitas baru.
+                    </p>
+                  </div>
+                </label>
+              </div>
+
+              <div className="flex gap-3 pt-2">
+                <button 
+                  type="button" 
+                  onClick={onCloseEditTxModal} 
+                  className="flex-1 py-3 rounded-xl bg-white/10 text-white text-sm font-semibold transition-all hover:bg-white/20 active:scale-95"
+                >
+                  Batal
+                </button>
+                <button 
+                  type="submit" 
+                  className="flex-1 py-3 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-sm font-semibold transition-all active:scale-95 shadow-lg shadow-purple-600/25 flex items-center justify-center gap-1.5"
+                >
+                  <Wrench size={15} /> Simpan Koreksi
                 </button>
               </div>
             </form>
