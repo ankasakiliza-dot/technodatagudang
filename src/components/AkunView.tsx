@@ -1,6 +1,7 @@
 import React from 'react';
-import { KeyRound, Users, UserPlus, LogOut, Trash2, ShieldCheck, User, Palette, Check, Wrench } from 'lucide-react';
+import { KeyRound, Users, UserPlus, LogOut, Trash2, ShieldCheck, User, Palette, Check, Wrench, Sun, Moon } from 'lucide-react';
 import { AppUser } from '../types';
+import { THEME_OPTIONS, isThemeLight } from '../lib/themeConfig';
 
 interface AkunViewProps {
   currentUser: AppUser | null;
@@ -12,13 +13,6 @@ interface AkunViewProps {
   currentTheme?: string;
   onSelectTheme?: (theme: string) => void;
 }
-
-const THEMES = [
-  { id: 'default', name: 'Cyber Slate', bg: 'bg-[#0b0f19]', desc: 'Klasik Gelap Moderat' },
-  { id: 'theme-oled', name: 'OLED Pure Black', bg: 'bg-black', desc: 'Hitam Pekat Hemat Daya' },
-  { id: 'theme-emerald', name: 'Emerald Dark', bg: 'bg-[#021a14]', desc: 'Nuansa Hijau Gelap' },
-  { id: 'theme-violet', name: 'Violet Night', bg: 'bg-[#0d0b1e]', desc: 'Ungu Malam Cyber' }
-];
 
 export const AkunView: React.FC<AkunViewProps> = ({
   currentUser,
@@ -35,6 +29,9 @@ export const AkunView: React.FC<AkunViewProps> = ({
   const isAdmin = currentUser.role === 'admin';
   const isTeknisi = currentUser.role === 'teknisi';
   const initial = currentUser.username.charAt(0).toUpperCase();
+
+  const lightThemes = THEME_OPTIONS.filter(t => t.category === 'light');
+  const darkThemes = THEME_OPTIONS.filter(t => t.category === 'dark');
 
   return (
     <section className="view-enter space-y-6">
@@ -75,35 +72,81 @@ export const AkunView: React.FC<AkunViewProps> = ({
 
         {/* Theme Selector Section */}
         {onSelectTheme && (
-          <div className="w-full max-w-sm mb-6 relative z-10 p-4 rounded-2xl bg-white/5 border border-white/10">
-            <h4 className="text-xs font-bold text-slate-300 flex items-center gap-2 mb-3 uppercase tracking-wider">
-              <Palette size={14} className="text-cyan-400" />
-              Pilihan Tema Gelap (Dark Mode)
-            </h4>
-            <div className="grid grid-cols-2 gap-2">
-              {THEMES.map(t => {
-                const isActive = currentTheme === t.id;
-                return (
-                  <button
-                    key={t.id}
-                    onClick={() => onSelectTheme(t.id)}
-                    className={`p-3 rounded-xl border text-left transition-all flex flex-col justify-between relative ${
-                      isActive 
-                        ? 'bg-cyan-500/20 border-cyan-500/50 text-white shadow-lg shadow-cyan-500/10' 
-                        : 'bg-slate-900/50 border-white/5 text-slate-400 hover:bg-white/5 hover:text-slate-200'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between w-full mb-1">
-                      <span className={`w-3 h-3 rounded-full ${t.bg} border border-white/20`}></span>
-                      {isActive && <Check size={14} className="text-cyan-400" />}
-                    </div>
-                    <div>
-                      <div className="text-xs font-bold">{t.name}</div>
-                      <div className="text-[9px] text-slate-400 line-clamp-1">{t.desc}</div>
-                    </div>
-                  </button>
-                );
-              })}
+          <div className="w-full max-w-md mb-6 relative z-10 p-5 rounded-2xl bg-white/5 border border-white/10 space-y-4">
+            <div className="flex items-center justify-between">
+              <h4 className="text-xs font-bold text-slate-300 flex items-center gap-2 uppercase tracking-wider">
+                <Palette size={15} className="text-cyan-400" />
+                Tampilan Tema Aplikasi
+              </h4>
+              <span className="text-[10px] text-slate-400">
+                Mode: {isThemeLight(currentTheme) ? 'Terang' : 'Gelap'}
+              </span>
+            </div>
+
+            {/* Mode Terang Section */}
+            <div>
+              <div className="text-[11px] font-bold text-amber-400 flex items-center gap-1.5 mb-2 uppercase tracking-wider">
+                <Sun size={13} /> Mode Terang (Light Mode)
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {lightThemes.map(t => {
+                  const isActive = currentTheme === t.id;
+                  return (
+                    <button
+                      key={t.id}
+                      type="button"
+                      onClick={() => onSelectTheme(t.id)}
+                      className={`p-3 rounded-xl border text-left transition-all flex flex-col justify-between relative ${
+                        isActive 
+                          ? 'bg-amber-500/20 border-amber-500/60 text-white shadow-md shadow-amber-500/10 ring-1 ring-amber-400/50' 
+                          : 'bg-slate-900/40 border-white/5 text-slate-400 hover:bg-white/5 hover:text-slate-200'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between w-full mb-1.5">
+                        <span className={`w-4 h-4 rounded-full bg-gradient-to-tr ${t.previewGradient || 'from-white to-slate-200'} border ${t.border} shadow-sm`}></span>
+                        {isActive && <Check size={14} className="text-amber-400" />}
+                      </div>
+                      <div>
+                        <div className="text-xs font-bold text-slate-200">{t.name}</div>
+                        <div className="text-[9px] text-slate-400 line-clamp-1">{t.desc}</div>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Mode Gelap Section */}
+            <div>
+              <div className="text-[11px] font-bold text-cyan-400 flex items-center gap-1.5 mb-2 uppercase tracking-wider">
+                <Moon size={13} /> Mode Gelap (Dark Mode)
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {darkThemes.map(t => {
+                  const isActive = currentTheme === t.id;
+                  return (
+                    <button
+                      key={t.id}
+                      type="button"
+                      onClick={() => onSelectTheme(t.id)}
+                      className={`p-3 rounded-xl border text-left transition-all flex flex-col justify-between relative ${
+                        isActive 
+                          ? 'bg-cyan-500/20 border-cyan-500/60 text-white shadow-md shadow-cyan-500/10 ring-1 ring-cyan-400/50' 
+                          : 'bg-slate-900/40 border-white/5 text-slate-400 hover:bg-white/5 hover:text-slate-200'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between w-full mb-1.5">
+                        <span className={`w-4 h-4 rounded-full bg-gradient-to-tr ${t.previewGradient || 'from-[#0b0f19] to-slate-800'} border ${t.border} shadow-sm`}></span>
+                        {isActive && <Check size={14} className="text-cyan-400" />}
+                      </div>
+                      <div>
+                        <div className="text-xs font-bold text-slate-200">{t.name}</div>
+                        <div className="text-[9px] text-slate-400 line-clamp-1">{t.desc}</div>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           </div>
         )}

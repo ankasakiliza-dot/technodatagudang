@@ -521,15 +521,40 @@ export const Modals: React.FC<ModalsProps> = ({
 
               {/* Catatan / Alasan Koreksi */}
               <div>
-                <label className="block text-[11px] font-semibold text-slate-400 uppercase tracking-wide mb-1.5 ml-1">
-                  Catatan / Keterangan Koreksi
-                </label>
+                <div className="flex items-center justify-between mb-1.5 ml-1">
+                  <label className="block text-[11px] font-semibold text-slate-400 uppercase tracking-wide">
+                    Catatan / Keterangan Transaksi
+                  </label>
+                  <div className="flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={() => setEditTxNote('Online')}
+                      className="px-2 py-0.5 rounded text-[10px] font-medium bg-blue-500/20 text-blue-300 hover:bg-blue-500/30 border border-blue-500/30 transition-all"
+                    >
+                      Online
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setEditTxNote('Retur Online')}
+                      className="px-2 py-0.5 rounded text-[10px] font-medium bg-amber-500/20 text-amber-300 hover:bg-amber-500/30 border border-amber-500/30 transition-all"
+                    >
+                      Retur Online
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setEditTxNote('')}
+                      className="px-2 py-0.5 rounded text-[10px] font-medium bg-white/10 text-slate-300 hover:bg-white/20 border border-white/10 transition-all"
+                    >
+                      Manual
+                    </button>
+                  </div>
+                </div>
                 <input 
                   type="text" 
                   value={editTxNote}
                   onChange={e => setEditTxNote(e.target.value)}
                   className="w-full bg-slate-900 border border-white/10 text-white text-sm rounded-xl focus:ring-2 focus:ring-purple-500/50 block p-3 outline-none transition-all placeholder-slate-600" 
-                  placeholder="Contoh: Koreksi salah ketik jumlah dari 5 ke 2" 
+                  placeholder="Ketik keterangan (Online / Retur Online / Manual)" 
                 />
               </div>
 

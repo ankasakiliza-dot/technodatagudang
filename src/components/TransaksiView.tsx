@@ -9,10 +9,15 @@ import {
   Repeat,
   Boxes,
   Info,
-  CheckCircle2
+  CheckCircle2,
+  Globe,
+  RotateCcw,
+  PenLine
 } from 'lucide-react';
 import { InventoryItem, CartItem, AppUser, ViewType } from '../types';
 import { calculateBundleStock, checkBundleFulfillable, getBundleComponentBreakdown } from '../lib/bundleUtils';
+
+type KeteranganType = 'Online' | 'Retur Online' | 'Lainnya';
 
 interface TransaksiViewProps {
   inventoryData: InventoryItem[];
@@ -34,7 +39,8 @@ export const TransaksiView: React.FC<TransaksiViewProps> = ({
   const [searchItem, setSearchItem] = useState('');
   const [selectedSku, setSelectedSku] = useState('');
   const [qty, setQty] = useState<number | ''>('');
-  const [keterangan, setKeterangan] = useState('');
+  const [keteranganPreset, setKeteranganPreset] = useState<KeteranganType>('Online');
+  const [customKeterangan, setCustomKeterangan] = useState('');
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [cart, setCart] = useState<CartItem[]>([]);
 
@@ -136,13 +142,23 @@ export const TransaksiView: React.FC<TransaksiViewProps> = ({
     const [year, month, day] = txDate.split('-').map(Number);
     const selectedDate = new Date(year, month - 1, day, now.getHours(), now.getMinutes(), now.getSeconds());
 
+    // Calculate final transaction note based on chosen preset
+    let finalNote = '';
+    if (keteranganPreset === 'Online') {
+      finalNote = customKeterangan.trim() ? `Online - ${customKeterangan.trim()}` : 'Online';
+    } else if (keteranganPreset === 'Retur Online') {
+      finalNote = customKeterangan.trim() ? `Retur Online - ${customKeterangan.trim()}` : 'Retur Online';
+    } else {
+      finalNote = customKeterangan.trim() || (item.isBundle ? 'Transaksi Barang Paket' : 'Lainnya');
+    }
+
     return {
       id: Date.now() + Math.random(),
       sku: item.sku,
       name: item.name,
       type: txType,
       qty: numQty,
-      note: keterangan.trim() || (item.isBundle ? 'Transaksi Barang Paket' : '-'),
+      note: finalNote,
       date: selectedDate.toISOString()
     };
   };
@@ -156,7 +172,7 @@ export const TransaksiView: React.FC<TransaksiViewProps> = ({
     setSearchItem('');
     setSelectedSku('');
     setQty('');
-    setKeterangan('');
+    setCustomKeterangan('');
     showToast(`${newItem.name} dimasukkan ke antrean transaksi`, 'success');
   };
 
@@ -168,7 +184,7 @@ export const TransaksiView: React.FC<TransaksiViewProps> = ({
     setSearchItem('');
     setSelectedSku('');
     setQty('');
-    setKeterangan('');
+    setCustomKeterangan('');
   };
 
   const handleRemoveFromCart = (id: number) => {
@@ -393,33 +409,105 @@ export const TransaksiView: React.FC<TransaksiViewProps> = ({
               </div>
             )}
 
-            {/* Qty & Note */}
-            <div className="grid grid-cols-3 gap-3">
-              <div className="col-span-1">
-                <label className="block text-[11px] font-semibold text-slate-400 uppercase tracking-wide mb-1.5 ml-1">
-                  Qty {isSelectedBundle && <span className="text-purple-400 font-normal lowercase">(paket)</span>}
-                </label>
-                <input 
-                  type="number" 
-                  required 
-                  min="1"
-                  value={qty}
-                  onChange={e => setQty(e.target.value ? parseInt(e.target.value) : '')}
-                  className="w-full bg-slate-900/50 border border-white/10 text-white text-sm rounded-xl focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 block p-3.5 outline-none transition-all placeholder-slate-600" 
-                  placeholder="1"
-                />
+            {/* Qty & Keterangan Transaksi */}
+            <div className="space-y-3">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="sm:col-span-1">
+                  <label className="block text-[11px] font-semibold text-slate-400 uppercase tracking-wide mb-1.5 ml-1">
+                    Qty {isSelectedBundle && <span className="text-purple-400 font-normal lowercase">(paket)</span>}
+                  </label>
+                  <input 
+                    type="number" 
+                    required 
+                    min="1"
+                    value={qty}
+                    onChange={e => setQty(e.target.value ? parseInt(e.target.value) : '')}
+                    className="w-full bg-slate-900/50 border border-white/10 text-white text-sm rounded-xl focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 block p-3.5 outline-none transition-all placeholder-slate-600 font-bold" 
+                    placeholder="1"
+                  />
+                </div>
+
+                <div className="sm:col-span-2">
+                  <label className="block text-[11px] font-semibold text-slate-400 uppercase tracking-wide mb-1.5 ml-1">
+                    Pilihan Keterangan Transaksi
+                  </label>
+                  <div className="grid grid-cols-3 gap-1.5 p-1 rounded-xl bg-slate-900/60 border border-white/10">
+                    <button
+                      type="button"
+                      onClick={() => setKeteranganPreset('Online')}
+                      className={`py-2 px-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
+                        keteranganPreset === 'Online'
+                          ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30'
+                          : 'text-slate-400 hover:text-white hover:bg-white/5'
+                      }`}
+                    >
+                      <Globe size={14} className="shrink-0" />
+                      <span className="truncate">Online</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setKeteranganPreset('Retur Online')}
+                      className={`py-2 px-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
+                        keteranganPreset === 'Retur Online'
+                          ? 'bg-amber-600 text-white shadow-md shadow-amber-600/30'
+                          : 'text-slate-400 hover:text-white hover:bg-white/5'
+                      }`}
+                    >
+                      <RotateCcw size={14} className="shrink-0" />
+                      <span className="truncate">Retur Online</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setKeteranganPreset('Lainnya')}
+                      className={`py-2 px-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
+                        keteranganPreset === 'Lainnya'
+                          ? 'bg-purple-600 text-white shadow-md shadow-purple-600/30'
+                          : 'text-slate-400 hover:text-white hover:bg-white/5'
+                      }`}
+                    >
+                      <PenLine size={14} className="shrink-0" />
+                      <span className="truncate">Lainnya</span>
+                    </button>
+                  </div>
+                </div>
               </div>
-              <div className="col-span-2">
-                <label className="block text-[11px] font-semibold text-slate-400 uppercase tracking-wide mb-1.5 ml-1">
-                  Keterangan <span className="text-slate-500 normal-case font-normal">(Opsional)</span>
+
+              {/* Detail / Catatan Input */}
+              <div>
+                <label className="block text-[11px] font-semibold text-slate-400 uppercase tracking-wide mb-1.5 ml-1 flex items-center justify-between">
+                  <span>
+                    {keteranganPreset === 'Online' && 'Catatan Tambahan Online (Opsional)'}
+                    {keteranganPreset === 'Retur Online' && 'Catatan Tambahan Retur (Opsional)'}
+                    {keteranganPreset === 'Lainnya' && 'Keterangan Manual'}
+                  </span>
+                  <span className="text-[10px] font-normal text-slate-500 lowercase">
+                    {keteranganPreset === 'Lainnya' ? 'diisi manual' : 'cth: no. resi / order id / nama buyer'}
+                  </span>
                 </label>
-                <input 
-                  type="text" 
-                  value={keterangan}
-                  onChange={e => setKeterangan(e.target.value)}
-                  className="w-full bg-slate-900/50 border border-white/10 text-white text-sm rounded-xl focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 block p-3.5 outline-none transition-all placeholder-slate-600" 
-                  placeholder="Cth: Penjualan / Proyek Kantor..."
-                />
+                <div className="relative">
+                  <input 
+                    type="text" 
+                    value={customKeterangan}
+                    onChange={e => setCustomKeterangan(e.target.value)}
+                    className="w-full bg-slate-900/50 border border-white/10 text-white text-sm rounded-xl focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 block p-3.5 outline-none transition-all placeholder-slate-600" 
+                    placeholder={
+                      keteranganPreset === 'Online'
+                        ? 'Cth: Shopee #240831ABC / Tokopedia INV/1234...'
+                        : keteranganPreset === 'Retur Online'
+                        ? 'Cth: Salah ukuran / Barang cacat pabrik / No. Resi Retur...'
+                        : 'Cth: Penjualan Langsung Toko / Proyek Kantor / Hadiah Promo...'
+                    }
+                  />
+                  {keteranganPreset !== 'Lainnya' && !customKeterangan && (
+                    <div className="absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none">
+                      <span className="text-[11px] text-slate-500 bg-white/5 px-2 py-0.5 rounded border border-white/10">
+                        Default: {keteranganPreset}
+                      </span>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 

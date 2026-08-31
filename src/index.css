@@ -76,6 +76,393 @@ body.theme-violet .glass-panel {
   border: 1px solid rgba(139, 92, 246, 0.15);
 }
 
+/* ==========================================================================
+   LIGHT THEME (MODE TERANG MODERN) COMPREHENSIVE OVERRIDES
+   ========================================================================== */
+
+/* 1. Modern Light Base Backgrounds */
+body.theme-light-eyecare {
+  --bg-main: #eef2f6;
+  background: radial-gradient(at 0% 0%, rgba(226, 232, 240, 0.85) 0px, transparent 50%), 
+              radial-gradient(at 100% 100%, rgba(238, 242, 246, 0.95) 0px, transparent 50%), 
+              #eef2f6 !important;
+  background-attachment: fixed !important;
+  color: #1e293b !important;
+}
+
+body.theme-light-warm {
+  --bg-main: #f5f2eb;
+  background: radial-gradient(at 0% 0%, rgba(254, 243, 199, 0.45) 0px, transparent 40%), 
+              radial-gradient(at 100% 100%, rgba(245, 240, 230, 0.85) 0px, transparent 45%), 
+              #f5f2eb !important;
+  background-attachment: fixed !important;
+  color: #292524 !important;
+}
+
+body.theme-light {
+  --bg-main: #f8fafc;
+  background: radial-gradient(at 0% 0%, rgba(224, 242, 254, 0.6) 0px, transparent 50%), 
+              radial-gradient(at 100% 0%, rgba(238, 242, 255, 0.7) 0px, transparent 50%), 
+              radial-gradient(at 50% 100%, rgba(241, 245, 249, 0.85) 0px, transparent 50%), 
+              #f8fafc !important;
+  background-attachment: fixed !important;
+  color: #0f172a !important;
+}
+
+body.theme-light-aurora {
+  --bg-main: #f0fdfa;
+  background: radial-gradient(at 0% 0%, rgba(204, 251, 241, 0.65) 0px, transparent 45%), 
+              radial-gradient(at 100% 10%, rgba(224, 242, 254, 0.65) 0px, transparent 50%), 
+              radial-gradient(at 50% 100%, rgba(236, 253, 245, 0.8) 0px, transparent 50%), 
+              #f0fdfa !important;
+  background-attachment: fixed !important;
+  color: #0f172a !important;
+}
+
+body.theme-light-minimal {
+  --bg-main: #f8fafc;
+  background-color: #f8fafc !important;
+  color: #0f172a !important;
+}
+
+/* Glass Panels in All Light Modes */
+body.theme-light-eyecare .glass-panel,
+body.theme-light-warm .glass-panel,
+body.theme-light .glass-panel,
+body.theme-light-aurora .glass-panel,
+body.theme-light-minimal .glass-panel {
+  background: rgba(255, 255, 255, 0.92) !important;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(203, 213, 225, 0.8) !important;
+  box-shadow: 0 4px 6px -1px rgba(15, 23, 42, 0.03), 0 10px 20px -5px rgba(15, 23, 42, 0.04) !important;
+  color: #1e293b !important;
+}
+
+body.theme-light-eyecare .glass-panel {
+  background: rgba(255, 255, 255, 0.94) !important;
+  border: 1px solid #cbd5e1 !important;
+  box-shadow: 0 4px 12px -2px rgba(30, 41, 59, 0.04) !important;
+}
+
+body.theme-light-warm .glass-panel {
+  background: rgba(254, 253, 250, 0.95) !important;
+  border: 1px solid #e7dfd5 !important;
+  box-shadow: 0 4px 12px -2px rgba(68, 45, 20, 0.04) !important;
+}
+
+body.theme-light-aurora .glass-panel {
+  background: rgba(255, 255, 255, 0.92) !important;
+  border: 1px solid rgba(204, 251, 241, 0.8) !important;
+  box-shadow: 0 4px 12px -2px rgba(13, 148, 136, 0.04) !important;
+}
+
+/* Navigation Bars in Light Mode */
+body.theme-light-eyecare .glass-nav,
+body.theme-light-warm .glass-nav,
+body.theme-light .glass-nav,
+body.theme-light-aurora .glass-nav,
+body.theme-light-minimal .glass-nav {
+  background: rgba(255, 255, 255, 0.92) !important;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(203, 213, 225, 0.8) !important;
+  box-shadow: 0 4px 16px -2px rgba(15, 23, 42, 0.04) !important;
+}
+
+body.theme-light-warm .glass-nav {
+  background: rgba(254, 253, 250, 0.95) !important;
+  border-bottom: 1px solid #e7dfd5 !important;
+}
+
+body.theme-light-aurora .glass-nav {
+  border-bottom: 1px solid rgba(204, 251, 241, 0.8) !important;
+}
+
+/* Nav Buttons in Light Mode */
+body.theme-light-eyecare .nav-btn,
+body.theme-light-warm .nav-btn,
+body.theme-light .nav-btn,
+body.theme-light-aurora .nav-btn,
+body.theme-light-minimal .nav-btn {
+  color: #64748b !important;
+}
+
+body.theme-light-eyecare .nav-btn.active,
+body.theme-light-warm .nav-btn.active,
+body.theme-light .nav-btn.active,
+body.theme-light-aurora .nav-btn.active,
+body.theme-light-minimal .nav-btn.active {
+  color: #0284c7 !important;
+}
+
+body.theme-light-eyecare .nav-btn.active .nav-indicator,
+body.theme-light-warm .nav-btn.active .nav-indicator,
+body.theme-light .nav-btn.active .nav-indicator,
+body.theme-light-aurora .nav-btn.active .nav-indicator,
+body.theme-light-minimal .nav-btn.active .nav-indicator {
+  background-color: #0284c7 !important;
+  box-shadow: 0 0 10px rgba(2, 132, 199, 0.4) !important;
+}
+
+/* Headings & Text in Light Mode */
+body.theme-light-eyecare h1,
+body.theme-light-eyecare h2,
+body.theme-light-eyecare h3,
+body.theme-light-eyecare h4,
+body.theme-light-warm h1,
+body.theme-light-warm h2,
+body.theme-light-warm h3,
+body.theme-light-warm h4,
+body.theme-light h1,
+body.theme-light h2,
+body.theme-light h3,
+body.theme-light h4,
+body.theme-light-aurora h1,
+body.theme-light-aurora h2,
+body.theme-light-aurora h3,
+body.theme-light-aurora h4,
+body.theme-light-minimal h1,
+body.theme-light-minimal h2,
+body.theme-light-minimal h3,
+body.theme-light-minimal h4 {
+  color: #0f172a !important;
+}
+
+body.theme-light-eyecare .text-white,
+body.theme-light-warm .text-white,
+body.theme-light .text-white,
+body.theme-light-aurora .text-white,
+body.theme-light-minimal .text-white {
+  color: #0f172a;
+}
+
+/* Retain white text for colored gradient/solid action buttons */
+body.theme-light-eyecare button.bg-gradient-to-r,
+body.theme-light-warm button.bg-gradient-to-r,
+body.theme-light button.bg-gradient-to-r,
+body.theme-light-aurora button.bg-gradient-to-r,
+body.theme-light-minimal button.bg-gradient-to-r,
+body.theme-light-eyecare button.bg-blue-600,
+body.theme-light-warm button.bg-blue-600,
+body.theme-light button.bg-blue-600,
+body.theme-light-aurora button.bg-blue-600,
+body.theme-light-minimal button.bg-blue-600,
+body.theme-light-eyecare button.bg-purple-600,
+body.theme-light-warm button.bg-purple-600,
+body.theme-light button.bg-purple-600,
+body.theme-light-aurora button.bg-purple-600,
+body.theme-light-minimal button.bg-purple-600,
+body.theme-light-eyecare button.bg-emerald-600,
+body.theme-light-warm button.bg-emerald-600,
+body.theme-light button.bg-emerald-600,
+body.theme-light-aurora button.bg-emerald-600,
+body.theme-light-minimal button.bg-emerald-600,
+body.theme-light-eyecare button.bg-rose-600,
+body.theme-light-warm button.bg-rose-600,
+body.theme-light button.bg-rose-600,
+body.theme-light-aurora button.bg-rose-600,
+body.theme-light-minimal button.bg-rose-600,
+body.theme-light-eyecare .text-white-forced,
+body.theme-light-warm .text-white-forced,
+body.theme-light .text-white-forced,
+body.theme-light-aurora .text-white-forced,
+body.theme-light-minimal .text-white-forced {
+  color: #ffffff !important;
+}
+
+/* Secondary Subtitles and Labels */
+body.theme-light-eyecare .text-slate-400,
+body.theme-light-warm .text-slate-400,
+body.theme-light .text-slate-400,
+body.theme-light-aurora .text-slate-400,
+body.theme-light-minimal .text-slate-400 {
+  color: #64748b !important;
+}
+
+body.theme-light-eyecare .text-slate-300,
+body.theme-light-warm .text-slate-300,
+body.theme-light .text-slate-300,
+body.theme-light-aurora .text-slate-300,
+body.theme-light-minimal .text-slate-300 {
+  color: #334155 !important;
+}
+
+body.theme-light-eyecare .text-slate-500,
+body.theme-light-warm .text-slate-500,
+body.theme-light .text-slate-500,
+body.theme-light-aurora .text-slate-500,
+body.theme-light-minimal .text-slate-500 {
+  color: #64748b !important;
+}
+
+/* Form Inputs, Selects, Textareas in Light Mode */
+body.theme-light-eyecare input,
+body.theme-light-eyecare select,
+body.theme-light-eyecare textarea,
+body.theme-light-warm input,
+body.theme-light-warm select,
+body.theme-light-warm textarea,
+body.theme-light input,
+body.theme-light select,
+body.theme-light textarea,
+body.theme-light-aurora input,
+body.theme-light-aurora select,
+body.theme-light-aurora textarea,
+body.theme-light-minimal input,
+body.theme-light-minimal select,
+body.theme-light-minimal textarea {
+  background-color: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  color: #0f172a !important;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.04) !important;
+}
+
+body.theme-light-eyecare input:focus,
+body.theme-light-eyecare select:focus,
+body.theme-light-eyecare textarea:focus,
+body.theme-light-warm input:focus,
+body.theme-light-warm select:focus,
+body.theme-light-warm textarea:focus,
+body.theme-light input:focus,
+body.theme-light select:focus,
+body.theme-light textarea:focus,
+body.theme-light-aurora input:focus,
+body.theme-light-aurora select:focus,
+body.theme-light-aurora textarea:focus,
+body.theme-light-minimal input:focus,
+body.theme-light-minimal select:focus,
+body.theme-light-minimal textarea:focus {
+  border-color: #0284c7 !important;
+  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15) !important;
+}
+
+body.theme-light-eyecare input::placeholder,
+body.theme-light-warm input::placeholder,
+body.theme-light input::placeholder,
+body.theme-light-aurora input::placeholder,
+body.theme-light-minimal input::placeholder {
+  color: #94a3b8 !important;
+}
+
+/* Dark Slate containers inside Light mode */
+body.theme-light-eyecare .bg-slate-900,
+body.theme-light-eyecare .bg-slate-900\/50,
+body.theme-light-eyecare .bg-slate-900\/80,
+body.theme-light-eyecare .bg-slate-900\/90,
+body.theme-light-eyecare .bg-slate-800,
+body.theme-light-eyecare .bg-slate-800\/50,
+body.theme-light-eyecare .bg-slate-800\/80,
+body.theme-light-warm .bg-slate-900,
+body.theme-light-warm .bg-slate-900\/50,
+body.theme-light-warm .bg-slate-900\/80,
+body.theme-light-warm .bg-slate-800,
+body.theme-light .bg-slate-900,
+body.theme-light .bg-slate-900\/50,
+body.theme-light .bg-slate-900\/80,
+body.theme-light .bg-slate-900\/90,
+body.theme-light .bg-slate-800,
+body.theme-light .bg-slate-800\/50,
+body.theme-light .bg-slate-800\/80,
+body.theme-light-aurora .bg-slate-900,
+body.theme-light-aurora .bg-slate-900\/50,
+body.theme-light-aurora .bg-slate-900\/80,
+body.theme-light-aurora .bg-slate-800,
+body.theme-light-minimal .bg-slate-900,
+body.theme-light-minimal .bg-slate-900\/50,
+body.theme-light-minimal .bg-slate-800 {
+  background-color: #f8fafc !important;
+  border-color: #e2e8f0 !important;
+  color: #0f172a !important;
+}
+
+body.theme-light-eyecare .bg-black\/30,
+body.theme-light-eyecare .bg-black\/40,
+body.theme-light-eyecare .bg-white\/5,
+body.theme-light-eyecare .bg-white\/10,
+body.theme-light-warm .bg-black\/30,
+body.theme-light-warm .bg-black\/40,
+body.theme-light-warm .bg-white\/5,
+body.theme-light-warm .bg-white\/10,
+body.theme-light .bg-black\/30,
+body.theme-light .bg-black\/40,
+body.theme-light .bg-white\/5,
+body.theme-light .bg-white\/10,
+body.theme-light-aurora .bg-black\/30,
+body.theme-light-aurora .bg-white\/5,
+body.theme-light-aurora .bg-white\/10,
+body.theme-light-minimal .bg-black\/30,
+body.theme-light-minimal .bg-white\/5,
+body.theme-light-minimal .bg-white\/10 {
+  background-color: #f1f5f9 !important;
+  border-color: #e2e8f0 !important;
+}
+
+body.theme-light-eyecare .hover\:bg-white\/5:hover,
+body.theme-light-eyecare .hover\:bg-white\/10:hover,
+body.theme-light-warm .hover\:bg-white\/5:hover,
+body.theme-light-warm .hover\:bg-white\/10:hover,
+body.theme-light .hover\:bg-white\/5:hover,
+body.theme-light .hover\:bg-white\/10:hover,
+body.theme-light-aurora .hover\:bg-white\/5:hover,
+body.theme-light-aurora .hover\:bg-white\/10:hover,
+body.theme-light-minimal .hover\:bg-white\/5:hover,
+body.theme-light-minimal .hover\:bg-white\/10:hover {
+  background-color: #e2e8f0 !important;
+}
+
+body.theme-light-eyecare .border-white\/5,
+body.theme-light-eyecare .border-white\/10,
+body.theme-light-eyecare .border-white\/20,
+body.theme-light-warm .border-white\/5,
+body.theme-light-warm .border-white\/10,
+body.theme-light-warm .border-white\/20,
+body.theme-light .border-white\/5,
+body.theme-light .border-white\/10,
+body.theme-light .border-white\/20,
+body.theme-light-aurora .border-white\/5,
+body.theme-light-aurora .border-white\/10,
+body.theme-light-aurora .border-white\/20,
+body.theme-light-minimal .border-white\/5,
+body.theme-light-minimal .border-white\/10,
+body.theme-light-minimal .border-white\/20 {
+  border-color: #e2e8f0 !important;
+}
+
+/* Modals & Popovers Backdrop in Light Mode */
+body.theme-light-eyecare .bg-black\/60,
+body.theme-light-warm .bg-black\/60,
+body.theme-light .bg-black\/60,
+body.theme-light-aurora .bg-black\/60,
+body.theme-light-minimal .bg-black\/60 {
+  background-color: rgba(15, 23, 42, 0.45) !important;
+}
+
+/* Light Scrollbar */
+body.theme-light-eyecare ::-webkit-scrollbar-track,
+body.theme-light-warm ::-webkit-scrollbar-track,
+body.theme-light ::-webkit-scrollbar-track,
+body.theme-light-aurora ::-webkit-scrollbar-track,
+body.theme-light-minimal ::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+body.theme-light-eyecare ::-webkit-scrollbar-thumb,
+body.theme-light-warm ::-webkit-scrollbar-thumb,
+body.theme-light ::-webkit-scrollbar-thumb,
+body.theme-light-aurora ::-webkit-scrollbar-thumb,
+body.theme-light-minimal ::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+}
+
+body.theme-light-eyecare ::-webkit-scrollbar-thumb:hover,
+body.theme-light-warm ::-webkit-scrollbar-thumb:hover,
+body.theme-light ::-webkit-scrollbar-thumb:hover,
+body.theme-light-aurora ::-webkit-scrollbar-thumb:hover,
+body.theme-light-minimal ::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
 /* Animations */
 @keyframes modalEnter {
   from {

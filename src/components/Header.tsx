@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Package, RefreshCw, Code, Moon, Palette, Check, Upload } from 'lucide-react';
+import { Package, RefreshCw, Code, Moon, Sun, Palette, Check, Upload } from 'lucide-react';
+import { THEME_OPTIONS, isThemeLight } from '../lib/themeConfig';
 
 interface HeaderProps {
   connectionStatus: string;
@@ -11,13 +12,6 @@ interface HeaderProps {
   onSelectTheme: (theme: string) => void;
 }
 
-const THEMES = [
-  { id: 'default', name: 'Cyber Slate', bg: 'bg-[#0b0f19]', color: 'border-cyan-500' },
-  { id: 'theme-oled', name: 'OLED Pure Black', bg: 'bg-black', color: 'border-white' },
-  { id: 'theme-emerald', name: 'Emerald Dark', bg: 'bg-[#021a14]', color: 'border-emerald-500' },
-  { id: 'theme-violet', name: 'Violet Night', bg: 'bg-[#0d0b1e]', color: 'border-purple-500' }
-];
-
 export const Header: React.FC<HeaderProps> = ({
   connectionStatus,
   isRefreshing,
@@ -28,9 +22,21 @@ export const Header: React.FC<HeaderProps> = ({
   onSelectTheme
 }) => {
   const [themeMenuOpen, setThemeMenuOpen] = useState(false);
+  const isLight = isThemeLight(currentTheme);
+
+  const handleQuickToggle = () => {
+    if (isLight) {
+      onSelectTheme('default');
+    } else {
+      onSelectTheme('theme-light-eyecare');
+    }
+  };
+
+  const lightThemes = THEME_OPTIONS.filter(t => t.category === 'light');
+  const darkThemes = THEME_OPTIONS.filter(t => t.category === 'dark');
 
   return (
-    <header className="sticky top-0 z-40 glass-nav border-b-0 shadow-lg shadow-black/20">
+    <header className="sticky top-0 z-40 glass-nav border-b-0 shadow-lg shadow-black/10">
       <div className="max-w-3xl mx-auto px-5 py-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-blue-600 to-cyan-400 flex items-center justify-center font-bold text-white shadow-[0_0_20px_rgba(56,189,248,0.4)]">
@@ -58,48 +64,112 @@ export const Header: React.FC<HeaderProps> = ({
               title="Upload / Import File Excel & CSV"
             >
               <Upload size={16} />
-              <span className="hidden sm:inline">Upload File</span>
+              <span className="hidden sm:inline">Upload</span>
             </button>
           )}
 
-          {/* Theme Dropdown Toggle */}
+          {/* Quick Light / Dark Mode Toggle Button */}
+          <button
+            onClick={handleQuickToggle}
+            className={`p-2.5 rounded-xl transition-all active:scale-95 border flex items-center gap-1.5 text-xs font-bold ${
+              isLight
+                ? 'bg-amber-500/15 text-amber-600 border-amber-500/30 hover:bg-amber-500/25'
+                : 'bg-indigo-500/15 text-indigo-300 border-indigo-500/30 hover:bg-indigo-500/25'
+            }`}
+            title={isLight ? 'Beralih ke Mode Gelap (Dark Mode)' : 'Beralih ke Mode Terang (Light Mode)'}
+          >
+            {isLight ? (
+              <>
+                <Sun size={16} className="text-amber-500 fill-amber-500/30" />
+                <span className="hidden sm:inline">Terang</span>
+              </>
+            ) : (
+              <>
+                <Moon size={16} className="text-indigo-400 fill-indigo-400/30" />
+                <span className="hidden sm:inline">Gelap</span>
+              </>
+            )}
+          </button>
+
+          {/* Theme Palette Dropdown Toggle */}
           <div className="relative">
             <button 
               onClick={() => setThemeMenuOpen(!themeMenuOpen)}
-              className="p-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 hover:text-cyan-400 transition-all active:scale-95 border border-white/5 flex items-center gap-1.5 text-xs"
-              title="Ganti Variant Tema Gelap"
+              className="p-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 hover:text-cyan-400 transition-all active:scale-95 border border-white/5 flex items-center gap-1 text-xs"
+              title="Pilih Variant Tema (Terang & Gelap)"
             >
               <Palette size={16} />
-              <span className="hidden sm:inline font-semibold">Tema</span>
             </button>
 
             {themeMenuOpen && (
               <>
                 <div className="fixed inset-0 z-40" onClick={() => setThemeMenuOpen(false)}></div>
-                <div className="absolute right-0 mt-2 w-48 rounded-2xl bg-slate-900 border border-white/10 shadow-2xl p-2 z-50 modal-content-enter space-y-1">
-                  <div className="px-3 py-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                    Pilih Tema Gelap
+                <div className="absolute right-0 mt-2 w-64 rounded-2xl bg-slate-900/95 border border-white/10 shadow-2xl p-3 z-50 modal-content-enter space-y-2.5 text-left backdrop-blur-2xl">
+                  {/* Mode Terang Section */}
+                  <div>
+                    <div className="px-2 py-1 text-[10px] font-bold text-amber-400 uppercase tracking-wider flex items-center justify-between">
+                      <span className="flex items-center gap-1.5"><Sun size={12} /> Mode Terang (Light)</span>
+                      <span className="text-[9px] text-slate-400 font-normal">Modern Palette</span>
+                    </div>
+                    <div className="space-y-1 mt-1">
+                      {lightThemes.map(t => (
+                        <button
+                          key={t.id}
+                          onClick={() => {
+                            onSelectTheme(t.id);
+                            setThemeMenuOpen(false);
+                          }}
+                          className={`w-full flex items-center justify-between px-2.5 py-2 rounded-xl text-xs font-semibold transition-all ${
+                            currentTheme === t.id 
+                              ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-sm' 
+                              : 'text-slate-300 hover:bg-white/5'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <span className={`w-4 h-4 rounded-full bg-gradient-to-tr ${t.previewGradient || 'from-white to-slate-200'} border ${t.border} shadow-sm shrink-0`}></span>
+                            <div className="truncate text-left">
+                              <div className="text-xs truncate font-medium">{t.name}</div>
+                            </div>
+                          </div>
+                          {currentTheme === t.id && <Check size={14} className="text-amber-400 shrink-0 ml-1" />}
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                  {THEMES.map(t => (
-                    <button
-                      key={t.id}
-                      onClick={() => {
-                        onSelectTheme(t.id);
-                        setThemeMenuOpen(false);
-                      }}
-                      className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition-all ${
-                        currentTheme === t.id 
-                          ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30' 
-                          : 'text-slate-300 hover:bg-white/5'
-                      }`}
-                    >
-                      <div className="flex items-center gap-2">
-                        <span className={`w-3 h-3 rounded-full ${t.bg} border ${t.color}`}></span>
-                        <span>{t.name}</span>
-                      </div>
-                      {currentTheme === t.id && <Check size={14} className="text-cyan-400" />}
-                    </button>
-                  ))}
+
+                  <div className="border-t border-white/10"></div>
+
+                  {/* Mode Gelap Section */}
+                  <div>
+                    <div className="px-2 py-1 text-[10px] font-bold text-cyan-400 uppercase tracking-wider flex items-center justify-between">
+                      <span className="flex items-center gap-1.5"><Moon size={12} /> Mode Gelap (Dark)</span>
+                      <span className="text-[9px] text-slate-400 font-normal">Cyber Palette</span>
+                    </div>
+                    <div className="space-y-1 mt-1">
+                      {darkThemes.map(t => (
+                        <button
+                          key={t.id}
+                          onClick={() => {
+                            onSelectTheme(t.id);
+                            setThemeMenuOpen(false);
+                          }}
+                          className={`w-full flex items-center justify-between px-2.5 py-2 rounded-xl text-xs font-semibold transition-all ${
+                            currentTheme === t.id 
+                              ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 shadow-sm' 
+                              : 'text-slate-300 hover:bg-white/5'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <span className={`w-4 h-4 rounded-full bg-gradient-to-tr ${t.previewGradient || 'from-[#0b0f19] to-slate-800'} border ${t.border} shadow-sm shrink-0`}></span>
+                            <div className="truncate text-left">
+                              <div className="text-xs truncate font-medium">{t.name}</div>
+                            </div>
+                          </div>
+                          {currentTheme === t.id && <Check size={14} className="text-cyan-400 shrink-0 ml-1" />}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               </>
             )}
@@ -111,8 +181,9 @@ export const Header: React.FC<HeaderProps> = ({
             title="Integrasi Blogger & AppsScript"
           >
             <Code size={16} />
-            <span className="hidden sm:inline">AppsScript / Blogger</span>
+            <span className="hidden sm:inline">AppsScript</span>
           </button>
+
           <button 
             onClick={onRefresh} 
             disabled={isRefreshing}

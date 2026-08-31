@@ -651,6 +651,8 @@ export default function App() {
             showToast(`Selamat datang, ${user.username}!`, 'success');
           }}
           showToast={showToast}
+          currentTheme={theme}
+          onSelectTheme={setTheme}
         />
       ) : (
         <div className="pb-24">

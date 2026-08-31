@@ -1,22 +1,37 @@
 import React, { useState } from 'react';
-import { Package, Loader2 } from 'lucide-react';
+import { Package, Loader2, Sun, Moon } from 'lucide-react';
 import { AppUser } from '../types';
+import { isThemeLight } from '../lib/themeConfig';
 
 interface LoginScreenProps {
   usersData: AppUser[];
   isDataLoaded: boolean;
   onLoginSuccess: (user: AppUser) => void;
   showToast: (msg: string, type?: 'success' | 'error') => void;
+  currentTheme?: string;
+  onSelectTheme?: (theme: string) => void;
 }
 
 export const LoginScreen: React.FC<LoginScreenProps> = ({
   usersData,
   isDataLoaded,
   onLoginSuccess,
-  showToast
+  showToast,
+  currentTheme = 'default',
+  onSelectTheme
 }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const isLight = isThemeLight(currentTheme);
+
+  const handleToggleTheme = () => {
+    if (!onSelectTheme) return;
+    if (isLight) {
+      onSelectTheme('default');
+    } else {
+      onSelectTheme('theme-light-eyecare');
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,6 +55,25 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
     <section className="min-h-screen flex flex-col items-center justify-center p-5 relative z-50 transition-opacity duration-500">
       <div className="glass-panel w-full max-w-sm rounded-3xl p-8 shadow-2xl relative overflow-hidden">
         <div className="absolute -right-8 -top-8 w-32 h-32 bg-blue-500/20 rounded-full blur-3xl"></div>
+
+        {/* Theme Quick Switcher in Login Card */}
+        {onSelectTheme && (
+          <div className="absolute top-4 right-4 z-20">
+            <button
+              type="button"
+              onClick={handleToggleTheme}
+              className={`p-2 rounded-xl border transition-all active:scale-95 flex items-center justify-center ${
+                isLight 
+                  ? 'bg-amber-500/15 text-amber-600 border-amber-500/30 hover:bg-amber-500/25' 
+                  : 'bg-white/5 text-slate-300 border-white/10 hover:bg-white/10'
+              }`}
+              title={isLight ? 'Beralih ke Mode Gelap' : 'Beralih ke Mode Terang'}
+            >
+              {isLight ? <Sun size={16} className="text-amber-500 fill-amber-500/30" /> : <Moon size={16} className="text-indigo-400 fill-indigo-400/30" />}
+            </button>
+          </div>
+        )}
+
         <div className="flex items-center gap-3 mb-8 relative z-10 justify-center">
           <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-blue-600 to-cyan-400 flex items-center justify-center font-bold text-white shadow-[0_0_20px_rgba(56,189,248,0.4)]">
             <Package size={26} strokeWidth={2.5} />
@@ -62,7 +96,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
               required 
               value={username}
               onChange={e => setUsername(e.target.value)}
-              className="w-full bg-slate-900/50 border border-white/10 text-white text-sm rounded-xl focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 block p-4 outline-none transition-all placeholder-slate-600" 
+              className="w-full bg-slate-900/50 border border-white/10 text-white text-sm rounded-xl focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 block p-4 outline-none transition-all placeholder-slate-600 font-medium" 
               placeholder="Masukkan username (cth: admin)"
             />
           </div>
@@ -75,7 +109,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
               required 
               value={password}
               onChange={e => setPassword(e.target.value)}
-              className="w-full bg-slate-900/50 border border-white/10 text-white text-sm rounded-xl focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 block p-4 outline-none transition-all placeholder-slate-600" 
+              className="w-full bg-slate-900/50 border border-white/10 text-white text-sm rounded-xl focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 block p-4 outline-none transition-all placeholder-slate-600 font-medium" 
               placeholder="••••••••"
             />
           </div>
@@ -83,7 +117,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
           <button 
             type="submit" 
             disabled={!isDataLoaded}
-            className={`w-full mt-4 text-white bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 focus:ring-4 focus:ring-blue-500/30 font-bold rounded-xl text-sm px-5 py-4 text-center transition-all active:scale-[0.98] shadow-lg shadow-blue-500/25 flex justify-center items-center gap-2 ${!isDataLoaded ? 'opacity-70 cursor-not-allowed' : ''}`}
+            className={`w-full mt-4 text-white text-white-forced bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 focus:ring-4 focus:ring-blue-500/30 font-bold rounded-xl text-sm px-5 py-4 text-center transition-all active:scale-[0.98] shadow-lg shadow-blue-500/25 flex justify-center items-center gap-2 ${!isDataLoaded ? 'opacity-70 cursor-not-allowed' : ''}`}
           >
             {!isDataLoaded ? (
               <>
