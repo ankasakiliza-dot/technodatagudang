@@ -12,7 +12,7 @@ import {
   orderBy,
   testConnection 
 } from './lib/firebase';
-import { InventoryItem, Transaction, AppUser, CartItem, ViewType, UserRole } from './types';
+import { InventoryItem, Transaction, AppUser, CartItem, ViewType, UserRole, BundleComponent } from './types';
 import { Header } from './components/Header';
 import { Navigation } from './components/Navigation';
 import { LoginScreen } from './components/LoginScreen';
@@ -346,7 +346,14 @@ export default function App() {
     }
   };
 
-  const handleSaveEdit = async (oldSku: string, newSku: string, newName: string, newMinStock: number) => {
+  const handleSaveEdit = async (
+    oldSku: string, 
+    newSku: string, 
+    newName: string, 
+    newMinStock: number,
+    isBundle?: boolean,
+    bundleItems?: BundleComponent[]
+  ) => {
     try {
       const existingItem = inventoryData.find(i => i.sku === oldSku);
       if (!existingItem) return;
@@ -359,12 +366,16 @@ export default function App() {
         ...existingItem,
         sku: newSku,
         name: newName,
-        minStock: newMinStock
+        minStock: newMinStock,
+        isBundle: isBundle !== undefined ? isBundle : existingItem.isBundle,
+        bundleItems: isBundle 
+          ? (bundleItems || []) 
+          : (isBundle === false ? [] : (existingItem.bundleItems || []))
       };
 
       await setDoc(doc(db, 'inventory', newSku), updatedItem);
 
-      showToast(`Data ${newSku} berhasil diubah di Firebase`, 'success');
+      showToast(`Data ${newSku} (${newName}) berhasil diperbarui di Firebase`, 'success');
       setEditItemModal(null);
     } catch (err) {
       console.error(err);
@@ -744,6 +755,7 @@ export default function App() {
           <Modals 
             confirmModal={confirmModal}
             onCloseConfirmModal={() => setConfirmModal(null)}
+            inventoryData={inventoryData}
             editItemModal={editItemModal}
             onCloseEditModal={() => setEditItemModal(null)}
             onSaveEdit={handleSaveEdit}

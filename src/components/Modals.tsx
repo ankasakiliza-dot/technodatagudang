@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   Trash2, 
   Pencil, 
@@ -19,18 +19,35 @@ import {
   ArrowDownRight,
   AlertTriangle,
   Layers,
-  Wrench
+  Wrench,
+  Boxes,
+  Plus,
+  Minus,
+  Search,
+  ChevronDown,
+  Package,
+  Info
 } from 'lucide-react';
-import { InventoryItem, Transaction, UserRole } from '../types';
+import { InventoryItem, Transaction, UserRole, BundleComponent } from '../types';
+import { calculateBundleStock } from '../lib/bundleUtils';
 import { APPS_SCRIPT_CODE, DEFAULT_APPS_SCRIPT_URL, getBloggerPageHtml, copyToClipboard } from '../lib/integrationExport';
 
 interface ModalsProps {
   confirmModal: { open: boolean; title: string; desc: string; onConfirm: () => void } | null;
   onCloseConfirmModal: () => void;
 
+  inventoryData?: InventoryItem[];
+
   editItemModal: { open: boolean; item: InventoryItem | null } | null;
   onCloseEditModal: () => void;
-  onSaveEdit: (oldSku: string, newSku: string, newName: string, newMinStock: number) => void;
+  onSaveEdit: (
+    oldSku: string, 
+    newSku: string, 
+    newName: string, 
+    newMinStock: number,
+    isBundle?: boolean,
+    bundleItems?: BundleComponent[]
+  ) => void;
 
   editTxModal?: { open: boolean; tx: Transaction | null } | null;
   onCloseEditTxModal?: () => void;
@@ -56,6 +73,7 @@ interface ModalsProps {
 export const Modals: React.FC<ModalsProps> = ({
   confirmModal,
   onCloseConfirmModal,
+  inventoryData = [],
   editItemModal,
   onCloseEditModal,
   onSaveEdit,
@@ -76,14 +94,107 @@ export const Modals: React.FC<ModalsProps> = ({
   const [editSku, setEditSku] = useState(editItemModal?.item?.sku || '');
   const [editName, setEditName] = useState(editItemModal?.item?.name || '');
   const [editMinStock, setEditMinStock] = useState<number | ''>(editItemModal?.item?.minStock || 5);
+  const [editIsBundle, setEditIsBundle] = useState<boolean>(false);
+  const [editBundleComponents, setEditBundleComponents] = useState<BundleComponent[]>([]);
+
+  // Component selector inside edit modal
+  const [selectedCompSku, setSelectedCompSku] = useState('');
+  const [selectedCompQty, setSelectedCompQty] = useState<number | ''>(1);
+  const [compSearchQuery, setCompSearchQuery] = useState('');
+  const [compDropdownOpen, setCompDropdownOpen] = useState(false);
+  const compDropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (editItemModal?.item) {
       setEditSku(editItemModal.item.sku);
       setEditName(editItemModal.item.name);
-      setEditMinStock(editItemModal.item.minStock || 5);
+      setEditMinStock(editItemModal.item.minStock !== undefined ? editItemModal.item.minStock : 5);
+      setEditIsBundle(!!editItemModal.item.isBundle);
+      setEditBundleComponents(
+        editItemModal.item.bundleItems ? editItemModal.item.bundleItems.map(c => ({ ...c })) : []
+      );
+      setSelectedCompSku('');
+      setSelectedCompQty(1);
+      setCompSearchQuery('');
+      setCompDropdownOpen(false);
     }
   }, [editItemModal]);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (compDropdownRef.current && !compDropdownRef.current.contains(e.target as Node)) {
+        setCompDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Eligible items to be added as components (non-bundles and not the bundle itself)
+  const eligibleComponents = inventoryData.filter(i => !i.isBundle && i.sku !== editSku);
+  const filteredEligibleComponents = eligibleComponents.filter(item => {
+    if (!compSearchQuery.trim()) return true;
+    const q = compSearchQuery.toLowerCase();
+    return item.sku.toLowerCase().includes(q) || item.name.toLowerCase().includes(q);
+  });
+  const selectedComponentObj = eligibleComponents.find(i => i.sku === selectedCompSku);
+
+  // Live capacity calculation for edited bundle
+  const liveCapacity = editIsBundle && editBundleComponents.length > 0
+    ? calculateBundleStock({
+        sku: editSku || 'TEMP',
+        name: editName || 'TEMP',
+        stock: 0,
+        minStock: typeof editMinStock === 'number' ? editMinStock : 5,
+        isBundle: true,
+        bundleItems: editBundleComponents
+      }, inventoryData)
+    : 0;
+
+  const handleAddBundleComponent = () => {
+    if (!selectedCompSku) {
+      showToast('Pilih barang komponen terlebih dahulu!', 'error');
+      return;
+    }
+    const compQtyNum = typeof selectedCompQty === 'number' ? selectedCompQty : parseInt(selectedCompQty) || 1;
+    if (compQtyNum <= 0) {
+      showToast('Jumlah komponen per paket minimal 1 unit!', 'error');
+      return;
+    }
+
+    const item = inventoryData.find(i => i.sku === selectedCompSku);
+    if (!item) return;
+
+    const existingIdx = editBundleComponents.findIndex(c => c.sku === selectedCompSku);
+    if (existingIdx !== -1) {
+      setEditBundleComponents(prev => prev.map((c, idx) => 
+        idx === existingIdx ? { ...c, qty: c.qty + compQtyNum } : c
+      ));
+      showToast(`Jumlah ${item.name} diperbarui (+${compQtyNum} unit)`, 'success');
+    } else {
+      setEditBundleComponents(prev => [
+        ...prev,
+        { sku: item.sku, name: item.name, qty: compQtyNum }
+      ]);
+      showToast(`${item.name} (${compQtyNum} unit) ditambahkan ke paket`, 'success');
+    }
+
+    setSelectedCompSku('');
+    setSelectedCompQty(1);
+    setCompSearchQuery('');
+    setCompDropdownOpen(false);
+  };
+
+  const handleUpdateComponentQty = (skuToUpdate: string, newQty: number) => {
+    if (newQty <= 0) return;
+    setEditBundleComponents(prev => prev.map(c => 
+      c.sku === skuToUpdate ? { ...c, qty: newQty } : c
+    ));
+  };
+
+  const handleRemoveBundleComponent = (skuToRemove: string) => {
+    setEditBundleComponents(prev => prev.filter(c => c.sku !== skuToRemove));
+  };
 
   // State for Edit Transaction Modal
   const [editTxType, setEditTxType] = useState<'Masuk' | 'Keluar' | 'Rusak'>('Masuk');
@@ -193,7 +304,20 @@ export const Modals: React.FC<ModalsProps> = ({
     e.preventDefault();
     if (!editItemModal?.item) return;
     const min = typeof editMinStock === 'number' ? editMinStock : parseInt(editMinStock) || 5;
-    onSaveEdit(editItemModal.item.sku, editSku, editName, min);
+
+    if (editIsBundle && editBundleComponents.length === 0) {
+      showToast('Barang paket harus memiliki minimal 1 barang komponen!', 'error');
+      return;
+    }
+
+    onSaveEdit(
+      editItemModal.item.sku, 
+      editSku.trim().toUpperCase(), 
+      editName.trim(), 
+      min,
+      editIsBundle,
+      editIsBundle ? editBundleComponents : []
+    );
   };
 
   const handleEditTxSubmit = (e: React.FormEvent) => {
@@ -265,64 +389,329 @@ export const Modals: React.FC<ModalsProps> = ({
         </div>
       )}
 
-      {/* 2. Edit Item Modal */}
+      {/* 2. Edit Item Modal (Supports both Standard Item and Bundle Item with Components) */}
       {editItemModal && editItemModal.open && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm modal-enter">
-          <div className="glass-panel w-full max-w-sm rounded-2xl p-6 shadow-2xl modal-content-enter">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 bg-blue-500/20 text-blue-400 rounded-xl flex items-center justify-center">
-                <Pencil size={20} strokeWidth={2.5} />
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm modal-enter overflow-y-auto">
+          <div className={`glass-panel w-full ${editIsBundle ? 'max-w-lg' : 'max-w-md'} rounded-3xl p-6 shadow-2xl modal-content-enter transition-all my-auto max-h-[90vh] flex flex-col`}>
+            
+            {/* Header */}
+            <div className="flex items-center justify-between gap-3 mb-4 pb-3 border-b border-white/10 shrink-0">
+              <div className="flex items-center gap-3">
+                <div className={`w-10 h-10 ${editIsBundle ? 'bg-purple-500/20 text-purple-400' : 'bg-blue-500/20 text-blue-400'} rounded-xl flex items-center justify-center`}>
+                  {editIsBundle ? <Boxes size={22} strokeWidth={2.5} /> : <Pencil size={20} strokeWidth={2.5} />}
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-lg font-bold text-white">
+                      {editIsBundle ? 'Edit Barang Paket' : 'Edit Master Barang'}
+                    </h3>
+                    {editIsBundle && (
+                      <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                        Bundle
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-[10px] font-mono text-slate-400">
+                    {editIsBundle ? 'Ubah Informasi & Komponen Paket' : 'Sesuaikan Master Data Barang'}
+                  </p>
+                </div>
               </div>
-              <div>
-                <h3 className="text-lg font-bold text-white">Edit Barang</h3>
-                <p className="text-[10px] font-mono text-slate-400">Sesuaikan Master Data</p>
-              </div>
+              <button
+                type="button"
+                onClick={onCloseEditModal}
+                className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-white/10 transition-colors"
+              >
+                <X size={18} />
+              </button>
             </div>
 
-            <form onSubmit={handleEditSubmit} className="space-y-4 mb-6">
-              <div>
-                <label className="block text-[11px] font-semibold text-slate-400 uppercase tracking-wide mb-1.5 ml-1">
-                  SKU / Kode Barang
-                </label>
-                <input 
-                  type="text" 
-                  value={editSku}
-                  onChange={e => setEditSku(e.target.value)}
-                  className="w-full bg-slate-900 border border-white/10 text-white text-sm rounded-xl focus:ring-2 focus:ring-blue-500/50 block p-3 outline-none transition-all uppercase" 
-                  placeholder="Contoh: ITM-001" 
-                  required
-                />
+            <form onSubmit={handleEditSubmit} className="space-y-4 flex-1 overflow-y-auto custom-scrollbar pr-1 pb-1">
+              {/* Type Switcher / Toggle */}
+              <div className="p-1.5 rounded-xl bg-slate-900/80 border border-white/10 flex gap-1">
+                <button
+                  type="button"
+                  onClick={() => setEditIsBundle(false)}
+                  className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
+                    !editIsBundle 
+                      ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30' 
+                      : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  <Package size={14} />
+                  Item Satuan
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setEditIsBundle(true)}
+                  className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
+                    editIsBundle 
+                      ? 'bg-purple-600 text-white shadow-md shadow-purple-600/30' 
+                      : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  <Boxes size={14} />
+                  Barang Paket (Bundle)
+                </button>
               </div>
 
+              {/* SKU & Alert Limit */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-400 uppercase tracking-wide mb-1.5 ml-1">
+                    SKU / Kode Barang
+                  </label>
+                  <input 
+                    type="text" 
+                    value={editSku}
+                    onChange={e => setEditSku(e.target.value)}
+                    className="w-full bg-slate-900 border border-white/10 text-white text-sm rounded-xl focus:ring-2 focus:ring-blue-500/50 block p-3 outline-none transition-all uppercase font-mono" 
+                    placeholder="Contoh: ITM-001" 
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-400 uppercase tracking-wide mb-1.5 ml-1">
+                    Batas Alert (Stok Minimum)
+                  </label>
+                  <input 
+                    type="number" 
+                    value={editMinStock}
+                    onChange={e => setEditMinStock(e.target.value ? parseInt(e.target.value) : '')}
+                    className="w-full bg-slate-900 border border-white/10 text-white text-sm rounded-xl focus:ring-2 focus:ring-amber-500/50 block p-3 outline-none transition-all" 
+                    placeholder="5" 
+                    required
+                  />
+                </div>
+              </div>
+
+              {/* Name */}
               <div>
                 <label className="block text-[11px] font-semibold text-slate-400 uppercase tracking-wide mb-1.5 ml-1">
-                  Nama Barang
+                  Nama {editIsBundle ? 'Barang Paket' : 'Barang'}
                 </label>
                 <input 
                   type="text" 
                   value={editName}
                   onChange={e => setEditName(e.target.value)}
                   className="w-full bg-slate-900 border border-white/10 text-white text-sm rounded-xl focus:ring-2 focus:ring-blue-500/50 block p-3 outline-none transition-all" 
-                  placeholder="Ketik nama barang..." 
+                  placeholder={editIsBundle ? "Contoh: Paket Bundling Gaming X1..." : "Ketik nama barang..."} 
                   required
                 />
               </div>
 
-              <div>
-                <label className="block text-[11px] font-semibold text-slate-400 uppercase tracking-wide mb-1.5 ml-1">
-                  Batas Alert (Stok Minimum)
-                </label>
-                <input 
-                  type="number" 
-                  value={editMinStock}
-                  onChange={e => setEditMinStock(e.target.value ? parseInt(e.target.value) : '')}
-                  className="w-full bg-slate-900 border border-white/10 text-white text-sm rounded-xl focus:ring-2 focus:ring-amber-500/50 block p-3 outline-none transition-all" 
-                  placeholder="5" 
-                  required
-                />
-              </div>
+              {/* BUNDLE COMPONENTS EDIT SECTION */}
+              {editIsBundle && (
+                <div className="space-y-3 pt-2 border-t border-white/10">
+                  
+                  {/* Live Capacity Card */}
+                  <div className="p-3.5 rounded-2xl bg-purple-950/40 border border-purple-500/30 flex items-center justify-between">
+                    <div>
+                      <div className="text-[11px] font-bold text-purple-300 uppercase tracking-wider flex items-center gap-1.5">
+                        <Zap size={14} className="text-purple-400" />
+                        Kapasitas Live Paket
+                      </div>
+                      <div className="text-[10px] text-slate-400">
+                        {editBundleComponents.length} jenis komponen dalam paket
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-xl font-extrabold text-white">
+                        {liveCapacity} <span className="text-xs font-normal text-purple-300">paket</span>
+                      </div>
+                      <div className="text-[9px] text-slate-400">dapat dirakit saat ini</div>
+                    </div>
+                  </div>
 
-              <div className="flex gap-3 pt-2">
+                  {/* Components List */}
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-400 uppercase tracking-wide mb-2 ml-1 flex items-center justify-between">
+                      <span className="flex items-center gap-1.5">
+                        <Layers size={13} className="text-purple-400" />
+                        Daftar Isi Komponen ({editBundleComponents.length})
+                      </span>
+                      <span className="text-[10px] lowercase font-normal text-slate-500">
+                        kelola isi & kuantitas per paket
+                      </span>
+                    </label>
+
+                    {editBundleComponents.length === 0 ? (
+                      <div className="p-4 rounded-xl border border-dashed border-amber-500/30 bg-amber-500/5 text-center text-xs text-amber-300 flex items-center justify-center gap-2">
+                        <AlertTriangle size={15} className="shrink-0" />
+                        <span>Paket ini belum memiliki komponen. Silakan tambahkan komponen di bawah.</span>
+                      </div>
+                    ) : (
+                      <div className="space-y-2 max-h-48 overflow-y-auto custom-scrollbar pr-1">
+                        {editBundleComponents.map((comp) => {
+                          const stockItem = inventoryData.find(i => i.sku === comp.sku);
+                          const currentStock = stockItem ? stockItem.stock : 0;
+                          return (
+                            <div 
+                              key={comp.sku}
+                              className="p-3 rounded-xl bg-slate-900/80 border border-white/10 flex items-center justify-between gap-3 hover:border-purple-500/30 transition-all"
+                            >
+                              <div className="min-w-0 flex-1">
+                                <div className="text-xs font-bold text-white truncate">
+                                  {comp.name}
+                                </div>
+                                <div className="text-[10px] text-slate-400 font-mono flex items-center gap-2">
+                                  <span>SKU: {comp.sku}</span>
+                                  <span>•</span>
+                                  <span className={currentStock > 0 ? 'text-emerald-400' : 'text-rose-400'}>
+                                    Stok Gudang: {currentStock}
+                                  </span>
+                                </div>
+                              </div>
+
+                              {/* Quantity editor controls */}
+                              <div className="flex items-center gap-2 shrink-0">
+                                <div className="flex items-center bg-slate-800 rounded-lg border border-white/10 p-0.5">
+                                  <button
+                                    type="button"
+                                    onClick={() => handleUpdateComponentQty(comp.sku, Math.max(1, comp.qty - 1))}
+                                    className="p-1 rounded text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
+                                    title="Kurangi Qty"
+                                  >
+                                    <Minus size={12} />
+                                  </button>
+                                  <input 
+                                    type="number" 
+                                    min="1"
+                                    value={comp.qty}
+                                    onChange={e => {
+                                      const v = parseInt(e.target.value);
+                                      if (!isNaN(v) && v > 0) {
+                                        handleUpdateComponentQty(comp.sku, v);
+                                      }
+                                    }}
+                                    className="w-10 text-center bg-transparent text-xs font-bold text-white outline-none"
+                                  />
+                                  <button
+                                    type="button"
+                                    onClick={() => handleUpdateComponentQty(comp.sku, comp.qty + 1)}
+                                    className="p-1 rounded text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
+                                    title="Tambah Qty"
+                                  >
+                                    <Plus size={12} />
+                                  </button>
+                                </div>
+                                <span className="text-[10px] text-slate-400 font-semibold">unit</span>
+
+                                <button
+                                  type="button"
+                                  onClick={() => handleRemoveBundleComponent(comp.sku)}
+                                  className="p-1.5 text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 rounded-lg transition-colors border border-transparent hover:border-rose-500/20"
+                                  title="Hapus komponen dari paket"
+                                >
+                                  <Trash2 size={14} />
+                                </button>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Add New Component Form */}
+                  <div className="p-3.5 rounded-2xl bg-white/[0.03] border border-white/10 space-y-2.5">
+                    <div className="text-xs font-bold text-white flex items-center gap-1.5">
+                      <Plus size={14} className="text-purple-400" />
+                      Tambah Komponen Baru ke Paket
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                      {/* Searchable dropdown */}
+                      <div className="sm:col-span-2 relative" ref={compDropdownRef}>
+                        <button
+                          type="button"
+                          onClick={() => setCompDropdownOpen(!compDropdownOpen)}
+                          className="w-full bg-slate-900 border border-white/10 text-left text-xs rounded-xl p-2.5 flex items-center justify-between text-white focus:ring-2 focus:ring-purple-500/50 outline-none"
+                        >
+                          <span className="truncate">
+                            {selectedComponentObj 
+                              ? `${selectedComponentObj.name} (${selectedComponentObj.sku})`
+                              : 'Pilih Barang Komponen...'}
+                          </span>
+                          <ChevronDown size={14} className="text-slate-400 shrink-0 ml-1" />
+                        </button>
+
+                        {compDropdownOpen && (
+                          <div className="absolute top-full left-0 right-0 mt-1 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl z-50 overflow-hidden">
+                            <div className="p-2 border-b border-white/10">
+                              <div className="relative">
+                                <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                                <input
+                                  type="text"
+                                  value={compSearchQuery}
+                                  onChange={e => setCompSearchQuery(e.target.value)}
+                                  placeholder="Cari SKU / nama barang..."
+                                  className="w-full bg-slate-800 text-xs rounded-lg pl-7 pr-2.5 py-1.5 text-white outline-none border border-white/5 placeholder-slate-500"
+                                  autoFocus
+                                />
+                              </div>
+                            </div>
+                            <div className="max-h-40 overflow-y-auto custom-scrollbar p-1">
+                              {filteredEligibleComponents.length === 0 ? (
+                                <div className="p-3 text-center text-[11px] text-slate-400">
+                                  Tidak ada barang ditemukan
+                                </div>
+                              ) : (
+                                filteredEligibleComponents.map(item => (
+                                  <button
+                                    key={item.sku}
+                                    type="button"
+                                    onClick={() => {
+                                      setSelectedCompSku(item.sku);
+                                      setCompDropdownOpen(false);
+                                      setCompSearchQuery('');
+                                    }}
+                                    className="w-full p-2 rounded-lg text-left text-xs hover:bg-white/5 flex items-center justify-between text-slate-200 transition-colors"
+                                  >
+                                    <div className="min-w-0 pr-2">
+                                      <div className="font-semibold text-white truncate">{item.name}</div>
+                                      <div className="text-[10px] text-slate-400 font-mono">SKU: {item.sku}</div>
+                                    </div>
+                                    <div className="text-right shrink-0">
+                                      <span className={`text-[11px] font-bold ${item.stock > 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                                        Stok: {item.stock}
+                                      </span>
+                                    </div>
+                                  </button>
+                                ))
+                              )}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Qty & Add Button */}
+                      <div className="flex gap-2">
+                        <input
+                          type="number"
+                          min="1"
+                          value={selectedCompQty}
+                          onChange={e => setSelectedCompQty(e.target.value ? parseInt(e.target.value) : '')}
+                          placeholder="Qty"
+                          className="w-16 bg-slate-900 border border-white/10 text-white text-xs rounded-xl p-2.5 text-center font-bold focus:ring-2 focus:ring-purple-500/50 outline-none"
+                          title="Jumlah unit per paket"
+                        />
+                        <button
+                          type="button"
+                          onClick={handleAddBundleComponent}
+                          className="flex-1 py-2.5 px-3 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-semibold transition-all active:scale-95 flex items-center justify-center gap-1 shadow-md shadow-purple-600/30"
+                        >
+                          <Plus size={14} />
+                          <span>Tambah</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Action Buttons */}
+              <div className="flex gap-3 pt-3 border-t border-white/10 shrink-0">
                 <button 
                   type="button" 
                   onClick={onCloseEditModal} 
@@ -332,9 +721,14 @@ export const Modals: React.FC<ModalsProps> = ({
                 </button>
                 <button 
                   type="submit" 
-                  className="flex-1 py-3 rounded-xl bg-blue-500 hover:bg-blue-600 text-white text-sm font-semibold transition-all active:scale-95 shadow-lg shadow-blue-500/25"
+                  className={`flex-1 py-3 rounded-xl ${
+                    editIsBundle 
+                      ? 'bg-purple-600 hover:bg-purple-500 shadow-purple-600/25' 
+                      : 'bg-blue-600 hover:bg-blue-500 shadow-blue-600/25'
+                  } text-white text-sm font-semibold transition-all active:scale-95 shadow-lg flex items-center justify-center gap-2`}
                 >
-                  Simpan
+                  <Check size={16} />
+                  Simpan Perubahan
                 </button>
               </div>
             </form>

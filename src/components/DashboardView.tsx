@@ -488,14 +488,28 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               </div>
             </div>
 
-            <div className="pt-2">
+            <div className="pt-2 flex gap-2">
               <button
                 type="button"
                 onClick={() => setSelectedBundleBreakdown(null)}
-                className="w-full py-3 rounded-xl bg-white/10 hover:bg-white/20 text-white text-sm font-semibold transition-all active:scale-95"
+                className="flex-1 py-3 rounded-xl bg-white/10 hover:bg-white/20 text-white text-sm font-semibold transition-all active:scale-95"
               >
                 Tutup
               </button>
+              {isAdmin && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const bundleToEdit = selectedBundleBreakdown;
+                    setSelectedBundleBreakdown(null);
+                    onPromptEdit(bundleToEdit.sku);
+                  }}
+                  className="flex-1 py-3 px-4 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-sm font-semibold transition-all active:scale-95 flex items-center justify-center gap-2 shadow-lg shadow-purple-600/30"
+                >
+                  <Pencil size={15} />
+                  <span>Edit Isi Paket</span>
+                </button>
+              )}
             </div>
           </div>
         </div>
