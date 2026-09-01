@@ -202,45 +202,73 @@ export const TransaksiView: React.FC<TransaksiViewProps> = ({
     setTxType('Masuk');
   };
 
+  // Dynamic theme colors based on active transaction type
+  const themeColors = {
+    Masuk: {
+      border: 'border-2 border-emerald-500/50 hover:border-emerald-400 shadow-emerald-500/10',
+      badge: 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40',
+      btnDirect: 'bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white border-2 border-emerald-400/50 shadow-lg shadow-emerald-500/30',
+      iconColor: 'text-emerald-400',
+      accentGlow: 'from-emerald-950/20 via-slate-900/90 to-slate-900/95'
+    },
+    Keluar: {
+      border: 'border-2 border-rose-500/50 hover:border-rose-400 shadow-rose-500/10',
+      badge: 'bg-rose-500/20 text-rose-300 border border-rose-500/40',
+      btnDirect: 'bg-gradient-to-r from-rose-600 to-red-500 hover:from-rose-500 hover:to-red-400 text-white border-2 border-rose-400/50 shadow-lg shadow-rose-500/30',
+      iconColor: 'text-rose-400',
+      accentGlow: 'from-rose-950/20 via-slate-900/90 to-slate-900/95'
+    },
+    Rusak: {
+      border: 'border-2 border-amber-500/50 hover:border-amber-400 shadow-amber-500/10',
+      badge: 'bg-amber-500/20 text-amber-300 border border-amber-500/40',
+      btnDirect: 'bg-gradient-to-r from-amber-600 to-orange-500 hover:from-amber-500 hover:to-orange-400 text-white border-2 border-amber-400/50 shadow-lg shadow-amber-500/30',
+      iconColor: 'text-amber-400',
+      accentGlow: 'from-amber-950/20 via-slate-900/90 to-slate-900/95'
+    }
+  }[txType];
+
   return (
     <section className="view-enter">
-      <div className="glass-panel rounded-3xl p-6 shadow-xl relative overflow-hidden">
+      <div className={`glass-panel rounded-3xl p-5 sm:p-7 shadow-2xl relative overflow-hidden transition-all bg-gradient-to-br ${themeColors.accentGlow} ${themeColors.border}`}>
         <div className="absolute top-0 right-0 p-8 opacity-5 pointer-events-none text-white">
           <Repeat size={120} />
         </div>
 
         <div className="relative z-10">
           <div className="flex items-center justify-between mb-1">
-            <h2 className="text-2xl font-bold text-white">Catat Transaksi</h2>
+            <div className="flex items-center gap-2.5">
+              <span className={`w-3 h-3 rounded-full animate-pulse ${txType === 'Masuk' ? 'bg-emerald-400' : txType === 'Keluar' ? 'bg-rose-400' : 'bg-amber-400'}`} />
+              <h2 className="text-2xl font-black text-white tracking-tight">Catat Transaksi</h2>
+            </div>
             <button 
               onClick={() => onSwitchView('riwayat')} 
-              className="text-[10px] font-bold bg-white/10 text-white px-3 py-1.5 rounded-lg hover:bg-white/20 transition-all border border-white/10 active:scale-95"
+              className="text-xs font-bold bg-white/10 text-white px-3.5 py-1.5 rounded-xl hover:bg-white/20 transition-all border-2 border-white/15 active:scale-95 shadow-sm"
             >
               Lihat Riwayat
             </button>
           </div>
-          <p className="text-sm text-slate-400 mb-6">Tambahkan beberapa transaksi sekaligus ke antrean sebelum disimpan ke database.</p>
+          <p className="text-sm text-slate-300 mb-6">Kelola dan simpan pergerakan barang masuk, keluar, atau rusak ke database.</p>
 
           <form onSubmit={handleAddToCart} className="space-y-4">
             {/* Date and Type Switcher Container */}
             <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
               <div className="sm:col-span-1">
-                <label className="block text-[11px] font-semibold text-slate-400 uppercase tracking-wide mb-1.5 ml-1">
+                <label className="block text-[11px] font-bold text-slate-300 uppercase tracking-wider mb-1.5 ml-1">
                   Tanggal
                 </label>
                 <input 
                   type="date" 
                   value={txDate}
                   onChange={e => setTxDate(e.target.value)}
-                  className="w-full bg-slate-900/50 border border-white/10 text-white text-xs rounded-xl focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 block p-3 outline-none transition-all"
+                  className="w-full bg-slate-900/90 border-2 border-white/15 hover:border-cyan-500/50 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/30 text-white text-xs rounded-xl block p-3 outline-none transition-all font-semibold [color-scheme:dark]"
                 />
               </div>
 
               <div className="sm:col-span-3">
-                <label className="block text-[11px] font-semibold text-slate-400 uppercase tracking-wide mb-1.5 ml-1">
+                <label className="block text-[11px] font-bold text-slate-300 uppercase tracking-wider mb-1.5 ml-1">
                   Tipe Transaksi
                 </label>
-                <div className="bg-black/30 p-1 rounded-xl flex gap-1 border border-white/5 h-[46px]">
+                <div className="bg-slate-950/80 p-1.5 rounded-2xl flex gap-1.5 border-2 border-white/15 h-[50px] shadow-inner">
                   <label className="flex-1 cursor-pointer relative">
                     <input 
                       type="radio" 
@@ -250,11 +278,14 @@ export const TransaksiView: React.FC<TransaksiViewProps> = ({
                       onChange={() => setTxType('Masuk')}
                       className="peer sr-only"
                     />
-                    <div className="relative z-10 h-full flex items-center justify-center gap-1.5 text-[10px] sm:text-xs font-semibold text-slate-400 peer-checked:text-white transition-colors">
-                      <ArrowUpRight size={14} className={txType === 'Masuk' ? 'text-emerald-400' : 'text-slate-500'} />
-                      B. Masuk
+                    <div className={`relative z-10 h-full rounded-xl flex items-center justify-center gap-1.5 text-xs font-bold transition-all ${
+                      txType === 'Masuk' 
+                        ? 'bg-emerald-500/30 text-emerald-300 border-2 border-emerald-500/60 shadow-md shadow-emerald-500/20' 
+                        : 'text-slate-400 hover:text-white hover:bg-white/5 border-2 border-transparent'
+                    }`}>
+                      <ArrowUpRight size={16} className={txType === 'Masuk' ? 'text-emerald-400 stroke-[2.5]' : 'text-slate-500'} />
+                      <span>Barang Masuk</span>
                     </div>
-                    <div className={`absolute inset-0 bg-white/10 rounded-lg transition-all ${txType === 'Masuk' ? 'opacity-100' : 'opacity-0'}`} />
                   </label>
 
                   <label className="flex-1 cursor-pointer relative">
@@ -266,11 +297,14 @@ export const TransaksiView: React.FC<TransaksiViewProps> = ({
                       onChange={() => setTxType('Keluar')}
                       className="peer sr-only"
                     />
-                    <div className="relative z-10 h-full flex items-center justify-center gap-1.5 text-[10px] sm:text-xs font-semibold text-slate-400 peer-checked:text-white transition-colors">
-                      <ArrowDownRight size={14} className={txType === 'Keluar' ? 'text-rose-400' : 'text-slate-500'} />
-                      B. Keluar
+                    <div className={`relative z-10 h-full rounded-xl flex items-center justify-center gap-1.5 text-xs font-bold transition-all ${
+                      txType === 'Keluar' 
+                        ? 'bg-rose-500/30 text-rose-300 border-2 border-rose-500/60 shadow-md shadow-rose-500/20' 
+                        : 'text-slate-400 hover:text-white hover:bg-white/5 border-2 border-transparent'
+                    }`}>
+                      <ArrowDownRight size={16} className={txType === 'Keluar' ? 'text-rose-400 stroke-[2.5]' : 'text-slate-500'} />
+                      <span>Barang Keluar</span>
                     </div>
-                    <div className={`absolute inset-0 bg-white/10 rounded-lg transition-all ${txType === 'Keluar' ? 'opacity-100' : 'opacity-0'}`} />
                   </label>
 
                   <label className="flex-1 cursor-pointer relative">
@@ -282,11 +316,14 @@ export const TransaksiView: React.FC<TransaksiViewProps> = ({
                       onChange={() => setTxType('Rusak')}
                       className="peer sr-only"
                     />
-                    <div className="relative z-10 h-full flex items-center justify-center gap-1.5 text-[10px] sm:text-xs font-semibold text-slate-400 peer-checked:text-white transition-colors">
-                      <AlertTriangle size={14} className={txType === 'Rusak' ? 'text-amber-400' : 'text-slate-500'} />
-                      B. Rusak
+                    <div className={`relative z-10 h-full rounded-xl flex items-center justify-center gap-1.5 text-xs font-bold transition-all ${
+                      txType === 'Rusak' 
+                        ? 'bg-amber-500/30 text-amber-300 border-2 border-amber-500/60 shadow-md shadow-amber-500/20' 
+                        : 'text-slate-400 hover:text-white hover:bg-white/5 border-2 border-transparent'
+                    }`}>
+                      <AlertTriangle size={15} className={txType === 'Rusak' ? 'text-amber-400 stroke-[2.5]' : 'text-slate-500'} />
+                      <span>Barang Rusak</span>
                     </div>
-                    <div className={`absolute inset-0 bg-white/10 rounded-lg transition-all ${txType === 'Rusak' ? 'opacity-100' : 'opacity-0'}`} />
                   </label>
                 </div>
               </div>
@@ -295,15 +332,15 @@ export const TransaksiView: React.FC<TransaksiViewProps> = ({
             {/* Item Search & Dropdown */}
             <div className="relative" ref={dropdownRef}>
               <div className="flex justify-between items-end mb-1.5">
-                <label className="block text-[11px] font-semibold text-slate-400 uppercase tracking-wide ml-1">
+                <label className="block text-[11px] font-bold text-slate-300 uppercase tracking-wider ml-1">
                   Pencarian Barang
                 </label>
                 <button 
                   type="button" 
                   onClick={() => onSwitchView('tambah')} 
-                  className="text-[10px] font-bold text-blue-400 hover:text-blue-300"
+                  className="text-xs font-bold text-cyan-400 hover:text-cyan-300 flex items-center gap-1"
                 >
-                  + Item Baru
+                  <Plus size={14} /> Tambah Item Baru
                 </button>
               </div>
 
@@ -316,16 +353,16 @@ export const TransaksiView: React.FC<TransaksiViewProps> = ({
                     setSearchItem(e.target.value);
                     setDropdownOpen(true);
                   }}
-                  className="w-full bg-slate-900/50 border border-white/10 text-white text-sm rounded-xl focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 block p-3.5 outline-none transition-all placeholder-slate-500" 
+                  className="w-full bg-slate-900/90 border-2 border-white/15 hover:border-cyan-500/50 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/30 text-white text-sm rounded-xl block p-3.5 outline-none transition-all placeholder-slate-500 font-semibold shadow-inner" 
                   placeholder="Ketik SKU atau Nama Barang..." 
                   required
                 />
               </div>
 
               {dropdownOpen && (
-                <ul className="absolute z-50 w-full mt-2 bg-slate-800 border border-white/10 rounded-xl shadow-2xl max-h-56 overflow-y-auto custom-scrollbar">
+                <ul className="absolute z-50 w-full mt-2 bg-slate-900 border-2 border-cyan-500/40 rounded-2xl shadow-2xl max-h-60 overflow-y-auto custom-scrollbar divide-y divide-white/5">
                   {filteredDropdownItems.length === 0 ? (
-                    <li className="p-4 text-sm text-slate-500 text-center">Barang tidak ditemukan</li>
+                    <li className="p-4 text-sm text-slate-400 text-center">Barang tidak ditemukan</li>
                   ) : (
                     filteredDropdownItems.map(item => {
                       const displayStock = item.isBundle 
@@ -340,20 +377,24 @@ export const TransaksiView: React.FC<TransaksiViewProps> = ({
                             setSelectedSku(item.sku);
                             setDropdownOpen(false);
                           }}
-                          className="px-4 py-3 hover:bg-white/10 cursor-pointer flex justify-between items-center transition-colors border-b border-white/5 last:border-0"
+                          className="px-4 py-3 hover:bg-cyan-500/10 cursor-pointer flex justify-between items-center transition-colors"
                         >
                           <div>
-                            <div className="text-sm font-semibold text-white flex items-center gap-2">
+                            <div className="text-sm font-bold text-white flex items-center gap-2">
                               {item.name}
                               {item.isBundle && (
-                                <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                                <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-purple-500/25 text-purple-300 border border-purple-500/40">
                                   📦 Paket ({item.bundleItems?.length || 0})
                                 </span>
                               )}
                             </div>
-                            <div className="text-[10px] text-slate-400">{item.sku}</div>
+                            <div className="text-xs font-mono text-cyan-400 font-semibold">{item.sku}</div>
                           </div>
-                          <div className={`text-xs font-bold ${displayStock > 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                          <div className={`text-xs font-bold px-2.5 py-1 rounded-lg border ${
+                            displayStock > 0 
+                              ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' 
+                              : 'bg-rose-500/20 text-rose-300 border-rose-500/40'
+                          }`}>
                             {item.isBundle ? `Kapasitas: ${displayStock} Pkt` : `Stok: ${displayStock}`}
                           </div>
                         </li>
@@ -366,18 +407,18 @@ export const TransaksiView: React.FC<TransaksiViewProps> = ({
 
             {/* BUNDLE INFO & COMPONENT STATUS CARD */}
             {selectedItemObj && isSelectedBundle && (
-              <div className="p-4 rounded-2xl bg-gradient-to-r from-purple-950/60 to-indigo-950/60 border border-purple-500/30 space-y-3">
+              <div className="p-4 rounded-2xl bg-gradient-to-r from-purple-950/60 to-indigo-950/60 border-2 border-purple-500/40 space-y-3 shadow-md shadow-purple-500/10">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2 text-purple-300 font-bold text-xs">
+                  <div className="flex items-center gap-2 text-purple-300 font-bold text-xs uppercase tracking-wide">
                     <Boxes size={16} />
                     Barang Paket Kombinasi Terpilih
                   </div>
-                  <div className="text-xs font-bold text-purple-200 bg-purple-500/20 px-2.5 py-1 rounded-lg border border-purple-500/30">
+                  <div className="text-xs font-bold text-purple-200 bg-purple-500/25 px-2.5 py-1 rounded-lg border border-purple-500/40">
                     Kapasitas: {bundleAvailableStock} Paket
                   </div>
                 </div>
 
-                <p className="text-[11px] text-slate-300">
+                <p className="text-xs text-slate-300">
                   {txType === 'Keluar' || txType === 'Rusak' 
                     ? '⚠️ Saat transaksi KELUAR/RUSAK diproses, sistem akan secara otomatis memotong stok barang-barang komponen berikut:' 
                     : 'ℹ️ Komponen yang terdaftar dalam paket ini:'}
@@ -387,14 +428,14 @@ export const TransaksiView: React.FC<TransaksiViewProps> = ({
                   {bundleBreakdown.map(comp => (
                     <div 
                       key={comp.sku} 
-                      className="p-2.5 rounded-xl bg-black/40 border border-white/5 flex items-center justify-between text-xs"
+                      className="p-2.5 rounded-xl bg-black/40 border border-purple-500/20 flex items-center justify-between text-xs"
                     >
                       <div className="truncate pr-2">
                         <span className="font-bold text-purple-300 mr-1.5">{comp.requiredQty}x</span>
-                        <span className="text-white">{comp.name}</span>
+                        <span className="text-white font-semibold">{comp.name}</span>
                       </div>
                       <div className="text-right shrink-0">
-                        <span className={`font-mono text-[11px] font-bold ${comp.currentStock > 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                        <span className={`font-mono text-xs font-bold ${comp.currentStock > 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
                           Stok: {comp.currentStock}
                         </span>
                         {comp.isLimiting && (
@@ -413,8 +454,8 @@ export const TransaksiView: React.FC<TransaksiViewProps> = ({
             <div className="space-y-3">
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div className="sm:col-span-1">
-                  <label className="block text-[11px] font-semibold text-slate-400 uppercase tracking-wide mb-1.5 ml-1">
-                    Qty {isSelectedBundle && <span className="text-purple-400 font-normal lowercase">(paket)</span>}
+                  <label className="block text-[11px] font-bold text-slate-300 uppercase tracking-wider mb-1.5 ml-1">
+                    Kuantitas {isSelectedBundle && <span className="text-purple-400 font-normal lowercase">(paket)</span>}
                   </label>
                   <input 
                     type="number" 
@@ -422,23 +463,23 @@ export const TransaksiView: React.FC<TransaksiViewProps> = ({
                     min="1"
                     value={qty}
                     onChange={e => setQty(e.target.value ? parseInt(e.target.value) : '')}
-                    className="w-full bg-slate-900/50 border border-white/10 text-white text-sm rounded-xl focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 block p-3.5 outline-none transition-all placeholder-slate-600 font-bold" 
-                    placeholder="1"
+                    className="w-full bg-slate-900/90 border-2 border-white/15 hover:border-cyan-500/50 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/30 text-white text-base rounded-xl block p-3.5 outline-none transition-all placeholder-slate-600 font-black shadow-inner" 
+                    placeholder="0"
                   />
                 </div>
 
                 <div className="sm:col-span-2">
-                  <label className="block text-[11px] font-semibold text-slate-400 uppercase tracking-wide mb-1.5 ml-1">
+                  <label className="block text-[11px] font-bold text-slate-300 uppercase tracking-wider mb-1.5 ml-1">
                     Pilihan Keterangan Transaksi
                   </label>
-                  <div className="grid grid-cols-3 gap-1.5 p-1 rounded-xl bg-slate-900/60 border border-white/10">
+                  <div className="grid grid-cols-3 gap-1.5 p-1 rounded-2xl bg-slate-950/80 border-2 border-white/15 shadow-inner">
                     <button
                       type="button"
                       onClick={() => setKeteranganPreset('Online')}
-                      className={`py-2 px-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
+                      className={`py-2.5 px-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${
                         keteranganPreset === 'Online'
-                          ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30'
-                          : 'text-slate-400 hover:text-white hover:bg-white/5'
+                          ? 'bg-blue-600/30 text-blue-300 border-2 border-blue-500/60 shadow-md shadow-blue-500/20'
+                          : 'text-slate-400 hover:text-white hover:bg-white/5 border-2 border-transparent'
                       }`}
                     >
                       <Globe size={14} className="shrink-0" />
@@ -448,10 +489,10 @@ export const TransaksiView: React.FC<TransaksiViewProps> = ({
                     <button
                       type="button"
                       onClick={() => setKeteranganPreset('Retur Online')}
-                      className={`py-2 px-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
+                      className={`py-2.5 px-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${
                         keteranganPreset === 'Retur Online'
-                          ? 'bg-amber-600 text-white shadow-md shadow-amber-600/30'
-                          : 'text-slate-400 hover:text-white hover:bg-white/5'
+                          ? 'bg-amber-600/30 text-amber-300 border-2 border-amber-500/60 shadow-md shadow-amber-500/20'
+                          : 'text-slate-400 hover:text-white hover:bg-white/5 border-2 border-transparent'
                       }`}
                     >
                       <RotateCcw size={14} className="shrink-0" />
@@ -461,10 +502,10 @@ export const TransaksiView: React.FC<TransaksiViewProps> = ({
                     <button
                       type="button"
                       onClick={() => setKeteranganPreset('Lainnya')}
-                      className={`py-2 px-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
+                      className={`py-2.5 px-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${
                         keteranganPreset === 'Lainnya'
-                          ? 'bg-purple-600 text-white shadow-md shadow-purple-600/30'
-                          : 'text-slate-400 hover:text-white hover:bg-white/5'
+                          ? 'bg-purple-600/30 text-purple-300 border-2 border-purple-500/60 shadow-md shadow-purple-500/20'
+                          : 'text-slate-400 hover:text-white hover:bg-white/5 border-2 border-transparent'
                       }`}
                     >
                       <PenLine size={14} className="shrink-0" />
@@ -476,14 +517,14 @@ export const TransaksiView: React.FC<TransaksiViewProps> = ({
 
               {/* Detail / Catatan Input */}
               <div>
-                <label className="block text-[11px] font-semibold text-slate-400 uppercase tracking-wide mb-1.5 ml-1 flex items-center justify-between">
+                <label className="block text-[11px] font-bold text-slate-300 uppercase tracking-wider mb-1.5 ml-1 flex items-center justify-between">
                   <span>
-                    {keteranganPreset === 'Online' && 'Catatan Tambahan Online (Opsional)'}
-                    {keteranganPreset === 'Retur Online' && 'Catatan Tambahan Retur (Opsional)'}
+                    {keteranganPreset === 'Online' && 'Keterangan / Order ID Online (Opsional)'}
+                    {keteranganPreset === 'Retur Online' && 'Catatan Retur Online (Opsional)'}
                     {keteranganPreset === 'Lainnya' && 'Keterangan Manual'}
                   </span>
-                  <span className="text-[10px] font-normal text-slate-500 lowercase">
-                    {keteranganPreset === 'Lainnya' ? 'diisi manual' : 'cth: no. resi / order id / nama buyer'}
+                  <span className="text-[10px] font-medium text-slate-400 lowercase">
+                    {keteranganPreset === 'Lainnya' ? 'diisi manual' : 'cth: no. resi / marketplace / buyer'}
                   </span>
                 </label>
                 <div className="relative">
@@ -491,18 +532,18 @@ export const TransaksiView: React.FC<TransaksiViewProps> = ({
                     type="text" 
                     value={customKeterangan}
                     onChange={e => setCustomKeterangan(e.target.value)}
-                    className="w-full bg-slate-900/50 border border-white/10 text-white text-sm rounded-xl focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 block p-3.5 outline-none transition-all placeholder-slate-600" 
+                    className="w-full bg-slate-900/90 border-2 border-white/15 hover:border-cyan-500/50 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/30 text-white text-sm rounded-xl block p-3.5 outline-none transition-all placeholder-slate-500 font-semibold shadow-inner" 
                     placeholder={
                       keteranganPreset === 'Online'
                         ? 'Cth: Shopee #240831ABC / Tokopedia INV/1234...'
                         : keteranganPreset === 'Retur Online'
                         ? 'Cth: Salah ukuran / Barang cacat pabrik / No. Resi Retur...'
-                        : 'Cth: Penjualan Langsung Toko / Proyek Kantor / Hadiah Promo...'
+                        : 'Cth: Restock / Barang rusak / Penjualan Langsung Toko...'
                     }
                   />
                   {keteranganPreset !== 'Lainnya' && !customKeterangan && (
                     <div className="absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none">
-                      <span className="text-[11px] text-slate-500 bg-white/5 px-2 py-0.5 rounded border border-white/10">
+                      <span className="text-[11px] text-cyan-300 bg-cyan-500/20 px-2.5 py-1 rounded-lg border border-cyan-500/40 font-bold">
                         Default: {keteranganPreset}
                       </span>
                     </div>
@@ -511,75 +552,86 @@ export const TransaksiView: React.FC<TransaksiViewProps> = ({
               </div>
             </div>
 
-            {/* Action Buttons: Choice 1 or Choice 2 */}
+            {/* Action Buttons: Choice 1 (Queue) or Choice 2 (Direct Save) */}
             <div className="pt-2 grid grid-cols-1 sm:grid-cols-2 gap-3">
               <button 
                 type="button" 
                 onClick={handleAddToCart}
-                className="w-full font-bold rounded-xl text-xs sm:text-sm px-4 py-3.5 text-center transition-all active:scale-[0.98] flex justify-center items-center gap-2 border text-cyan-300 bg-cyan-500/10 hover:bg-cyan-500/20 border-cyan-500/20 focus:ring-4 focus:ring-cyan-500/10"
+                className="w-full font-bold rounded-2xl text-xs sm:text-sm px-4 py-4 text-center transition-all active:scale-[0.98] flex justify-center items-center gap-2 border-2 border-cyan-500/40 text-cyan-300 bg-cyan-500/15 hover:bg-cyan-500/25 shadow-md shadow-cyan-500/10"
               >
-                <Plus size={16} strokeWidth={2.5} />
-                Pilihan 1: Tambah ke Antrean
+                <Plus size={18} strokeWidth={2.5} />
+                <span>Pilihan 1: Masukkan Antrean</span>
               </button>
 
               <button 
                 type="button" 
                 onClick={handleDirectSave}
-                className="w-full font-bold rounded-xl text-xs sm:text-sm px-4 py-3.5 text-center transition-all active:scale-[0.98] flex justify-center items-center gap-2 text-white bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 font-bold shadow-lg shadow-blue-500/20 border border-cyan-400/30"
+                className={`w-full font-black rounded-2xl text-xs sm:text-sm px-4 py-4 text-center transition-all active:scale-[0.98] flex justify-center items-center gap-2 ${themeColors.btnDirect}`}
               >
-                <CheckCircle size={16} strokeWidth={2.5} />
-                Pilihan 2: Langsung Simpan Database
+                <CheckCircle size={18} strokeWidth={2.5} />
+                <span>Pilihan 2: Langsung Simpan Database</span>
               </button>
             </div>
           </form>
 
           {/* Cart Section */}
           {cart.length > 0 && (
-            <div className="mt-6 pt-5 border-t border-white/10">
+            <div className="mt-6 pt-5 border-t-2 border-white/15">
               <div className="flex items-center justify-between mb-3">
-                <h3 className="text-sm font-bold text-white">Daftar Transaksi ({cart.length})</h3>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-sm font-black text-white tracking-wide">Antrean Transaksi</h3>
+                  <span className="px-2 py-0.5 rounded-lg bg-blue-500/30 text-blue-300 border border-blue-500/40 text-xs font-bold">
+                    {cart.length} item
+                  </span>
+                </div>
                 <button 
                   type="button" 
                   onClick={handleClearCart} 
-                  className="text-[10px] text-rose-400 hover:text-rose-300 font-semibold uppercase tracking-wider"
+                  className="text-xs text-rose-400 hover:text-rose-300 font-bold uppercase tracking-wider px-2.5 py-1 rounded-lg hover:bg-rose-500/10 transition-colors"
                 >
                   Kosongkan
                 </button>
               </div>
 
-              <div className="space-y-2 max-h-48 overflow-y-auto custom-scrollbar pr-1 mb-4">
-                {cart.map((item, index) => {
-                  let textClass = 'text-emerald-400';
+              <div className="space-y-2 max-h-56 overflow-y-auto custom-scrollbar pr-1 mb-4">
+                {cart.map((item) => {
+                  let borderClass = 'border-2 border-emerald-500/40 bg-gradient-to-r from-emerald-950/30 to-slate-900/90 text-emerald-400';
                   let sign = '+';
-                  if (item.type === 'Keluar') { textClass = 'text-rose-400'; sign = '-'; }
-                  if (item.type === 'Rusak') { textClass = 'text-amber-400'; sign = '-'; }
+                  if (item.type === 'Keluar') { 
+                    borderClass = 'border-2 border-rose-500/40 bg-gradient-to-r from-rose-950/30 to-slate-900/90 text-rose-400'; 
+                    sign = '-'; 
+                  }
+                  if (item.type === 'Rusak') { 
+                    borderClass = 'border-2 border-amber-500/40 bg-gradient-to-r from-amber-950/30 to-slate-900/90 text-amber-400'; 
+                    sign = '-'; 
+                  }
 
                   const isCartBundle = inventoryData.some(i => i.sku === item.sku && i.isBundle);
 
                   return (
-                    <div key={item.id} className="flex items-center justify-between p-3 bg-black/20 border border-white/5 rounded-xl">
+                    <div key={item.id} className={`flex items-center justify-between p-3.5 rounded-2xl shadow-sm ${borderClass}`}>
                       <div className="flex-1 overflow-hidden pr-2">
                         <div className="text-xs font-bold text-white truncate flex items-center gap-1.5">
                           {item.name}
                           {isCartBundle && (
-                            <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                            <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-purple-500/30 text-purple-300 border border-purple-500/40">
                               📦 Paket
                             </span>
                           )}
                         </div>
-                        <div className="text-[10px] text-slate-400 flex gap-2 mt-0.5">
-                          <span className={`${textClass} font-semibold`}>{item.type} ({sign}{item.qty} {isCartBundle ? 'pkt' : 'unit'})</span>
-                          {item.note !== '-' && (
-                            <span className="truncate italic text-slate-500">"{item.note}"</span>
+                        <div className="text-[11px] text-slate-300 flex items-center gap-2 mt-1">
+                          <span className="font-bold">{item.type} ({sign}{item.qty} {isCartBundle ? 'pkt' : 'unit'})</span>
+                          {item.note && item.note !== '-' && (
+                            <span className="truncate italic text-slate-400 font-medium">"{item.note}"</span>
                           )}
                         </div>
                       </div>
                       <button 
                         type="button" 
                         onClick={() => handleRemoveFromCart(item.id)} 
-                        className="p-2 text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-colors"
+                        className="p-2 text-slate-400 hover:text-rose-400 hover:bg-rose-500/20 rounded-xl transition-all border border-white/10"
                       >
-                        <Trash2 size={14} strokeWidth={2.5} />
+                        <Trash2 size={15} strokeWidth={2.5} />
                       </button>
                     </div>
                   );
@@ -589,10 +641,10 @@ export const TransaksiView: React.FC<TransaksiViewProps> = ({
               <button 
                 type="button" 
                 onClick={handleSubmitCart} 
-                className="w-full text-white bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 focus:ring-4 focus:ring-blue-500/30 font-bold rounded-xl text-sm px-5 py-4 text-center transition-all active:scale-[0.98] shadow-lg shadow-blue-500/25 flex justify-center items-center gap-2"
+                className="w-full text-white bg-gradient-to-r from-blue-600 via-cyan-600 to-teal-500 hover:from-blue-500 hover:to-teal-400 focus:ring-4 focus:ring-cyan-500/30 font-black rounded-2xl text-sm px-5 py-4 text-center transition-all active:scale-[0.98] shadow-xl shadow-cyan-500/25 flex justify-center items-center gap-2 border-2 border-cyan-400/40"
               >
                 <CheckCircle size={18} strokeWidth={2.5} />
-                Simpan Semua ke Database (Firebase)
+                <span>Simpan Semua ({cart.length} Transaksi) ke Database</span>
               </button>
             </div>
           )}

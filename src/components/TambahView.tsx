@@ -243,7 +243,11 @@ export const TambahView: React.FC<TambahViewProps> = ({
         </button>
       </div>
 
-      <div className="glass-panel rounded-3xl p-6 shadow-xl relative overflow-hidden">
+      <div className={`glass-panel rounded-3xl p-5 sm:p-7 shadow-2xl relative overflow-hidden transition-all ${
+        itemType === 'standard'
+          ? 'border-2 border-cyan-500/40 bg-gradient-to-br from-cyan-950/20 via-slate-900/90 to-slate-900/95 shadow-cyan-500/10'
+          : 'border-2 border-purple-500/50 bg-gradient-to-br from-purple-950/25 via-slate-900/90 to-slate-900/95 shadow-purple-500/10'
+      }`}>
         <div className="absolute top-0 right-0 p-8 opacity-5 pointer-events-none text-white">
           <Boxes size={120} />
         </div>
@@ -251,10 +255,13 @@ export const TambahView: React.FC<TambahViewProps> = ({
         <div className="relative z-10">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
             <div>
-              <h2 className="text-2xl font-bold text-white mb-1">
-                {itemType === 'standard' ? 'Tambah Item Satuan' : 'Buat Barang Paket / Kombinasi'}
-              </h2>
-              <p className="text-sm text-slate-400">
+              <div className="flex items-center gap-2 mb-1">
+                <span className={`w-3 h-3 rounded-full animate-pulse ${itemType === 'standard' ? 'bg-cyan-400' : 'bg-purple-400'}`} />
+                <h2 className="text-2xl font-black text-white tracking-tight">
+                  {itemType === 'standard' ? 'Tambah Item Satuan' : 'Buat Barang Paket (Bundle)'}
+                </h2>
+              </div>
+              <p className="text-sm text-slate-300">
                 {itemType === 'standard' 
                   ? 'Tambahkan master data barang individu/satuan ke database.' 
                   : 'Gabungkan beberapa barang dalam 1 paket. Saat paket keluar, stok barang komponen otomatis berkurang.'}
@@ -262,29 +269,29 @@ export const TambahView: React.FC<TambahViewProps> = ({
             </div>
 
             {/* Mode Switcher Tabs */}
-            <div className="bg-black/40 p-1 rounded-2xl flex border border-white/10 shrink-0">
+            <div className="bg-slate-950/80 p-1.5 rounded-2xl flex border-2 border-white/15 shrink-0 shadow-inner">
               <button
                 type="button"
                 onClick={() => setItemType('standard')}
-                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${
+                className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${
                   itemType === 'standard'
-                    ? 'bg-gradient-to-r from-blue-600 to-cyan-500 text-white shadow-md shadow-blue-500/25'
-                    : 'text-slate-400 hover:text-white hover:bg-white/5'
+                    ? 'bg-gradient-to-r from-blue-600 to-cyan-500 text-white shadow-md shadow-cyan-500/25 border-2 border-cyan-400/40'
+                    : 'text-slate-400 hover:text-white hover:bg-white/5 border-2 border-transparent'
                 }`}
               >
-                <Package size={14} />
+                <Package size={15} />
                 Item Satuan
               </button>
               <button
                 type="button"
                 onClick={() => setItemType('bundle')}
-                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${
+                className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${
                   itemType === 'bundle'
-                    ? 'bg-gradient-to-r from-indigo-600 to-purple-500 text-white shadow-md shadow-purple-500/25'
-                    : 'text-slate-400 hover:text-white hover:bg-white/5'
+                    ? 'bg-gradient-to-r from-indigo-600 to-purple-500 text-white shadow-md shadow-purple-500/25 border-2 border-purple-400/40'
+                    : 'text-slate-400 hover:text-white hover:bg-white/5 border-2 border-transparent'
                 }`}
               >
-                <Boxes size={14} />
+                <Boxes size={15} />
                 Barang Paket (Bundle)
               </button>
             </div>
@@ -294,20 +301,20 @@ export const TambahView: React.FC<TambahViewProps> = ({
           {itemType === 'standard' && (
             <form onSubmit={handleStandardSubmit} className="space-y-5">
               <div>
-                <label className="block text-[11px] font-semibold text-slate-400 uppercase tracking-wide mb-1.5 ml-1">
-                  Kode / SKU <span className="text-slate-500 capitalize normal-case font-normal">(Kosongkan untuk otomatis)</span>
+                <label className="block text-[11px] font-bold text-slate-300 uppercase tracking-wider mb-1.5 ml-1">
+                  Kode / SKU <span className="text-slate-400 capitalize normal-case font-normal">(Kosongkan untuk otomatis)</span>
                 </label>
                 <input 
                   type="text" 
                   value={sku}
                   onChange={e => setSku(e.target.value)}
-                  className="w-full bg-slate-900/50 border border-white/10 text-white text-sm rounded-xl focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 block p-4 outline-none transition-all placeholder-slate-600 uppercase" 
+                  className="w-full bg-slate-900/90 border-2 border-white/15 hover:border-cyan-500/50 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/30 text-white text-sm rounded-xl block p-3.5 outline-none transition-all placeholder-slate-500 font-mono uppercase font-bold shadow-inner" 
                   placeholder="Cth: ITM-001"
                 />
               </div>
 
               <div>
-                <label className="block text-[11px] font-semibold text-slate-400 uppercase tracking-wide mb-1.5 ml-1">
+                <label className="block text-[11px] font-bold text-slate-300 uppercase tracking-wider mb-1.5 ml-1">
                   Nama Barang
                 </label>
                 <input 
@@ -315,14 +322,14 @@ export const TambahView: React.FC<TambahViewProps> = ({
                   required 
                   value={name}
                   onChange={e => setName(e.target.value)}
-                  className="w-full bg-slate-900/50 border border-white/10 text-white text-sm rounded-xl focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 block p-4 outline-none transition-all placeholder-slate-600" 
+                  className="w-full bg-slate-900/90 border-2 border-white/15 hover:border-cyan-500/50 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/30 text-white text-sm rounded-xl block p-3.5 outline-none transition-all placeholder-slate-500 font-semibold shadow-inner" 
                   placeholder="Masukkan nama barang"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[11px] font-semibold text-slate-400 uppercase tracking-wide mb-1.5 ml-1">
+                  <label className="block text-[11px] font-bold text-slate-300 uppercase tracking-wider mb-1.5 ml-1">
                     Stok Awal
                   </label>
                   <input 
@@ -331,13 +338,13 @@ export const TambahView: React.FC<TambahViewProps> = ({
                     min="0"
                     value={stock}
                     onChange={e => setStock(e.target.value ? parseInt(e.target.value) : '')}
-                    className="w-full bg-slate-900/50 border border-white/10 text-white text-sm rounded-xl focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 block p-4 outline-none transition-all placeholder-slate-600" 
+                    className="w-full bg-slate-900/90 border-2 border-white/15 hover:border-cyan-500/50 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/30 text-white text-base rounded-xl block p-3.5 outline-none transition-all placeholder-slate-500 font-black text-center shadow-inner" 
                     placeholder="0"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-semibold text-slate-400 uppercase tracking-wide mb-1.5 ml-1">
+                  <label className="block text-[11px] font-bold text-slate-300 uppercase tracking-wider mb-1.5 ml-1">
                     Batas Alert (Min.)
                   </label>
                   <input 
@@ -346,7 +353,7 @@ export const TambahView: React.FC<TambahViewProps> = ({
                     min="0"
                     value={minStock}
                     onChange={e => setMinStock(e.target.value ? parseInt(e.target.value) : '')}
-                    className="w-full bg-slate-900/50 border border-white/10 text-white text-sm rounded-xl focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500 block p-4 outline-none transition-all placeholder-slate-600" 
+                    className="w-full bg-slate-900/90 border-2 border-white/15 hover:border-amber-500/50 focus:border-amber-400 focus:ring-2 focus:ring-amber-500/30 text-white text-base rounded-xl block p-3.5 outline-none transition-all placeholder-slate-500 font-black text-center shadow-inner" 
                     placeholder="5"
                   />
                 </div>
@@ -354,10 +361,10 @@ export const TambahView: React.FC<TambahViewProps> = ({
 
               <button 
                 type="submit" 
-                className="w-full mt-2 text-white bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 focus:ring-4 focus:ring-blue-500/30 font-bold rounded-xl text-sm px-5 py-4 text-center transition-all active:scale-[0.98] shadow-lg shadow-blue-500/25 flex justify-center items-center gap-2"
+                className="w-full mt-3 text-white bg-gradient-to-r from-blue-600 via-cyan-600 to-teal-500 hover:from-blue-500 hover:to-teal-400 focus:ring-4 focus:ring-cyan-500/30 font-black rounded-2xl text-sm px-5 py-4 text-center transition-all active:scale-[0.98] shadow-xl shadow-cyan-500/25 flex justify-center items-center gap-2 border-2 border-cyan-400/40"
               >
                 <Plus size={18} strokeWidth={2.5} />
-                Simpan Item Satuan
+                <span>+ Simpan Item Baru ke Database</span>
               </button>
             </form>
           )}
@@ -366,28 +373,28 @@ export const TambahView: React.FC<TambahViewProps> = ({
           {itemType === 'bundle' && (
             <form onSubmit={handleBundleSubmit} className="space-y-5">
               {/* Bundle Header Information */}
-              <div className="p-4 rounded-2xl bg-indigo-950/40 border border-indigo-500/20 space-y-4">
+              <div className="p-4 rounded-2xl bg-indigo-950/40 border-2 border-indigo-500/30 space-y-4 shadow-md">
                 <div className="flex items-center gap-2 text-indigo-300 font-bold text-xs uppercase tracking-wider">
-                  <Info size={14} />
+                  <Info size={15} />
                   Informasi Paket Kombinasi
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-[11px] font-semibold text-slate-300 uppercase tracking-wide mb-1.5 ml-1">
-                      SKU Paket <span className="text-slate-500 capitalize normal-case font-normal">(Auto jika kosong)</span>
+                    <label className="block text-[11px] font-bold text-slate-300 uppercase tracking-wider mb-1.5 ml-1">
+                      SKU Paket <span className="text-slate-400 capitalize normal-case font-normal">(Auto jika kosong)</span>
                     </label>
                     <input 
                       type="text" 
                       value={bundleSku}
                       onChange={e => setBundleSku(e.target.value)}
-                      className="w-full bg-slate-900/80 border border-white/10 text-white text-sm rounded-xl focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 block p-3.5 outline-none transition-all placeholder-slate-600 uppercase" 
+                      className="w-full bg-slate-900/90 border-2 border-white/15 hover:border-purple-500/50 focus:border-purple-400 focus:ring-2 focus:ring-purple-500/30 text-white text-sm rounded-xl block p-3.5 outline-none transition-all placeholder-slate-500 font-mono uppercase font-bold shadow-inner" 
                       placeholder="Cth: PKT-001"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-[11px] font-semibold text-slate-300 uppercase tracking-wide mb-1.5 ml-1">
+                    <label className="block text-[11px] font-bold text-slate-300 uppercase tracking-wider mb-1.5 ml-1">
                       Batas Alert Minimum
                     </label>
                     <input 
@@ -396,14 +403,14 @@ export const TambahView: React.FC<TambahViewProps> = ({
                       min="0"
                       value={bundleMinStock}
                       onChange={e => setBundleMinStock(e.target.value ? parseInt(e.target.value) : '')}
-                      className="w-full bg-slate-900/80 border border-white/10 text-white text-sm rounded-xl focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500 block p-3.5 outline-none transition-all placeholder-slate-600" 
+                      className="w-full bg-slate-900/90 border-2 border-white/15 hover:border-amber-500/50 focus:border-amber-400 focus:ring-2 focus:ring-amber-500/30 text-white text-base rounded-xl block p-3.5 outline-none transition-all placeholder-slate-500 font-black text-center shadow-inner" 
                       placeholder="5"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-semibold text-slate-300 uppercase tracking-wide mb-1.5 ml-1">
+                  <label className="block text-[11px] font-bold text-slate-300 uppercase tracking-wider mb-1.5 ml-1">
                     Nama Paket Kombinasi
                   </label>
                   <input 
@@ -411,20 +418,20 @@ export const TambahView: React.FC<TambahViewProps> = ({
                     required 
                     value={bundleName}
                     onChange={e => setBundleName(e.target.value)}
-                    className="w-full bg-slate-900/80 border border-white/10 text-white text-sm rounded-xl focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 block p-3.5 outline-none transition-all placeholder-slate-600" 
+                    className="w-full bg-slate-900/90 border-2 border-white/15 hover:border-purple-500/50 focus:border-purple-400 focus:ring-2 focus:ring-purple-500/30 text-white text-sm rounded-xl block p-3.5 outline-none transition-all placeholder-slate-500 font-semibold shadow-inner" 
                     placeholder="Cth: Paket Komputer Kantor Lengkap (PC + Monitor + Aksesoris)"
                   />
                 </div>
               </div>
 
               {/* Component Selector Section */}
-              <div className="p-4 rounded-2xl bg-black/30 border border-white/10 space-y-4">
+              <div className="p-4 rounded-2xl bg-black/40 border-2 border-purple-500/30 space-y-4 shadow-md">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2 text-white font-bold text-xs uppercase tracking-wider">
-                    <Layers size={15} className="text-purple-400" />
+                    <Layers size={16} className="text-purple-400" />
                     Pilih Barang Komponen Paket
                   </div>
-                  <span className="text-[10px] text-slate-400">
+                  <span className="text-xs font-bold text-purple-300 bg-purple-500/20 px-2.5 py-0.5 rounded-lg border border-purple-500/30">
                     {bundleComponents.length} barang dipilih
                   </span>
                 </div>
@@ -433,11 +440,11 @@ export const TambahView: React.FC<TambahViewProps> = ({
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div className="sm:col-span-2 relative" ref={compDropdownRef}>
                     <div className="flex justify-between items-center mb-1.5 ml-1">
-                      <label className="block text-[11px] font-semibold text-slate-300 uppercase tracking-wide">
+                      <label className="block text-[11px] font-bold text-slate-300 uppercase tracking-wider">
                         Cari & Pilih Barang Komponen
                       </label>
                       {selectedComponentObj && (
-                        <span className="text-[10px] text-purple-300 font-semibold">
+                        <span className="text-xs text-purple-300 font-bold">
                           Terpilih: {selectedComponentObj.sku}
                         </span>
                       )}
@@ -461,7 +468,7 @@ export const TambahView: React.FC<TambahViewProps> = ({
                           setCompDropdownOpen(true);
                         }}
                         placeholder="Ketik SKU atau nama barang untuk mencari..."
-                        className="w-full bg-slate-900/90 border border-white/10 text-white text-sm rounded-xl focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 block pl-10 pr-10 p-3.5 outline-none transition-all placeholder-slate-500 font-medium"
+                        className="w-full bg-slate-900/90 border-2 border-white/15 hover:border-purple-500/50 focus:border-purple-400 focus:ring-2 focus:ring-purple-500/30 text-white text-sm rounded-xl block pl-10 pr-10 p-3.5 outline-none transition-all placeholder-slate-500 font-semibold shadow-inner"
                       />
                       
                       {/* Clear / Toggle Dropdown Button */}
@@ -493,11 +500,11 @@ export const TambahView: React.FC<TambahViewProps> = ({
 
                     {/* Search Results Dropdown Menu */}
                     {compDropdownOpen && (
-                      <div className="absolute z-50 left-0 right-0 mt-2 bg-slate-900 border border-purple-500/30 rounded-2xl shadow-2xl overflow-hidden backdrop-blur-xl modal-content-enter">
-                        <div className="px-3.5 py-2 bg-purple-950/40 border-b border-white/5 flex items-center justify-between text-[11px] text-purple-200">
-                          <span className="font-semibold">Daftar Barang Gudang</span>
-                          <span className="text-[10px] text-slate-400">
-                            {filteredEligibleComponents.length} barang ditemukan
+                      <div className="absolute z-50 left-0 right-0 mt-2 bg-slate-900 border-2 border-purple-500/40 rounded-2xl shadow-2xl overflow-hidden backdrop-blur-xl modal-content-enter">
+                        <div className="px-3.5 py-2 bg-purple-950/60 border-b border-white/10 flex items-center justify-between text-xs text-purple-200">
+                          <span className="font-bold">Daftar Barang Gudang</span>
+                          <span className="text-[11px] text-slate-400">
+                            {filteredEligibleComponents.length} barang
                           </span>
                         </div>
 
@@ -521,8 +528,8 @@ export const TambahView: React.FC<TambahViewProps> = ({
                                     setCompSearchQuery('');
                                     setCompDropdownOpen(false);
                                   }}
-                                  className={`w-full px-4 py-3 text-left flex items-center justify-between hover:bg-purple-600/15 transition-colors ${
-                                    isSelected ? 'bg-purple-600/25' : ''
+                                  className={`w-full px-4 py-3 text-left flex items-center justify-between hover:bg-purple-600/20 transition-colors ${
+                                    isSelected ? 'bg-purple-600/30' : ''
                                   }`}
                                 >
                                   <div className="flex items-center gap-3">
@@ -534,25 +541,25 @@ export const TambahView: React.FC<TambahViewProps> = ({
                                       {isSelected ? <Check size={14} /> : <Package size={14} />}
                                     </div>
                                     <div>
-                                      <div className="text-sm font-semibold text-white flex items-center gap-2">
+                                      <div className="text-sm font-bold text-white flex items-center gap-2">
                                         {item.name}
                                         {existingComp && (
-                                          <span className="text-[9px] px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-300 border border-purple-500/30 font-mono">
+                                          <span className="text-[9px] px-1.5 py-0.5 rounded bg-purple-500/25 text-purple-300 border border-purple-500/40 font-mono font-bold">
                                             Di paket: {existingComp.qty}x
                                           </span>
                                         )}
                                       </div>
-                                      <div className="text-[10px] text-slate-400 font-mono mt-0.5">
-                                        SKU: <span className="text-slate-300">{item.sku}</span>
+                                      <div className="text-xs text-cyan-400 font-mono mt-0.5 font-semibold">
+                                        SKU: {item.sku}
                                       </div>
                                     </div>
                                   </div>
 
                                   <div className="text-right shrink-0">
-                                    <span className={`text-xs font-bold ${item.stock > 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                                    <span className={`text-xs font-bold px-2 py-0.5 rounded border ${item.stock > 0 ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' : 'bg-rose-500/20 text-rose-300 border-rose-500/40'}`}>
                                       Stok: {item.stock}
                                     </span>
-                                    <div className="text-[9px] text-slate-400">unit</div>
+                                    <div className="text-[10px] text-slate-400 mt-0.5">unit</div>
                                   </div>
                                 </button>
                               );
@@ -564,7 +571,7 @@ export const TambahView: React.FC<TambahViewProps> = ({
                   </div>
 
                   <div>
-                    <label className="block text-[11px] font-semibold text-slate-400 uppercase tracking-wide mb-1.5 ml-1">
+                    <label className="block text-[11px] font-bold text-slate-300 uppercase tracking-wider mb-1.5 ml-1">
                       Qty per Paket
                     </label>
                     <div className="flex gap-2">
@@ -579,17 +586,17 @@ export const TambahView: React.FC<TambahViewProps> = ({
                             handleAddComponent();
                           }
                         }}
-                        className="w-full bg-slate-900/90 border border-white/10 text-white text-sm rounded-xl focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 block p-3.5 outline-none transition-all text-center font-bold" 
+                        className="w-full bg-slate-900/90 border-2 border-white/15 hover:border-purple-500/50 focus:border-purple-400 focus:ring-2 focus:ring-purple-500/30 text-white text-base rounded-xl block p-3.5 outline-none transition-all text-center font-black shadow-inner" 
                         placeholder="1"
                       />
                       <button
                         type="button"
                         onClick={handleAddComponent}
                         disabled={!selectedCompSku}
-                        className={`px-4 font-bold rounded-xl transition-all active:scale-95 flex items-center justify-center shrink-0 shadow-md ${
+                        className={`px-4 font-black rounded-xl transition-all active:scale-95 flex items-center justify-center shrink-0 shadow-lg border-2 ${
                           selectedCompSku 
-                            ? 'bg-purple-600 hover:bg-purple-500 text-white shadow-purple-600/25 cursor-pointer' 
-                            : 'bg-purple-600/40 text-purple-300/60 cursor-not-allowed'
+                            ? 'bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white border-purple-400/40 shadow-purple-600/25 cursor-pointer' 
+                            : 'bg-purple-900/40 text-purple-400/40 border-purple-500/20 cursor-not-allowed'
                         }`}
                         title="Tambahkan ke Paket"
                       >
@@ -601,11 +608,11 @@ export const TambahView: React.FC<TambahViewProps> = ({
 
                 {/* Selected Item Notification Badge if selected */}
                 {selectedComponentObj && (
-                  <div className="p-3 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-between">
+                  <div className="p-3 rounded-xl bg-purple-500/15 border-2 border-purple-500/30 flex items-center justify-between shadow-sm">
                     <div className="flex items-center gap-2.5">
-                      <div className="w-2 h-2 rounded-full bg-purple-400 animate-pulse"></div>
+                      <div className="w-2.5 h-2.5 rounded-full bg-purple-400 animate-pulse"></div>
                       <div className="text-xs text-purple-200">
-                        Siap ditambahkan: <span className="font-bold text-white">{selectedComponentObj.name}</span> (<span className="font-mono text-purple-300">{selectedComponentObj.sku}</span>) — Sisa stok gudang: <strong className="text-emerald-400">{selectedComponentObj.stock} unit</strong>
+                        Siap ditambahkan: <span className="font-bold text-white">{selectedComponentObj.name}</span> (<span className="font-mono text-cyan-300">{selectedComponentObj.sku}</span>) — Stok: <strong className="text-emerald-400">{selectedComponentObj.stock} unit</strong>
                       </div>
                     </div>
                     <button
@@ -614,16 +621,16 @@ export const TambahView: React.FC<TambahViewProps> = ({
                         setSelectedCompSku('');
                         setCompSearchQuery('');
                       }}
-                      className="text-[10px] text-purple-300 hover:text-white underline ml-2 shrink-0"
+                      className="text-xs font-bold text-purple-300 hover:text-white underline ml-2 shrink-0"
                     >
-                      Batal Pilih
+                      Batal
                     </button>
                   </div>
                 )}
 
                 {/* List of Added Components */}
                 {bundleComponents.length > 0 ? (
-                  <div className="space-y-2 pt-2 border-t border-white/5">
+                  <div className="space-y-2 pt-2 border-t-2 border-white/10">
                     {bundleComponents.map((comp) => {
                       const invItem = inventoryData.find(i => i.sku === comp.sku);
                       const currentStock = invItem ? invItem.stock : 0;
@@ -632,16 +639,16 @@ export const TambahView: React.FC<TambahViewProps> = ({
                       return (
                         <div 
                           key={comp.sku} 
-                          className="flex items-center justify-between p-3 bg-white/5 border border-white/5 rounded-xl hover:bg-white/[0.07] transition-all"
+                          className="flex items-center justify-between p-3.5 bg-slate-900/80 border-2 border-purple-500/30 rounded-2xl hover:border-purple-400 transition-all shadow-sm"
                         >
                           <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-lg bg-purple-500/20 text-purple-300 font-bold text-xs flex items-center justify-center border border-purple-500/30">
+                            <div className="w-9 h-9 rounded-xl bg-purple-500/25 text-purple-300 font-black text-sm flex items-center justify-center border border-purple-500/40 shrink-0">
                               {comp.qty}x
                             </div>
                             <div>
-                              <div className="text-sm font-semibold text-white">{comp.name}</div>
-                              <div className="text-[10px] text-slate-400 font-mono">
-                                SKU: {comp.sku} • Stok Gudang: <span className={currentStock > 0 ? 'text-emerald-400 font-bold' : 'text-rose-400 font-bold'}>{currentStock}</span> (Cukup untuk {maxPossible} paket)
+                              <div className="text-sm font-bold text-white">{comp.name}</div>
+                              <div className="text-xs text-slate-400 font-mono mt-0.5">
+                                SKU: <span className="text-cyan-400">{comp.sku}</span> • Stok: <span className={currentStock > 0 ? 'text-emerald-400 font-bold' : 'text-rose-400 font-bold'}>{currentStock} unit</span> (Cukup {maxPossible} pkt)
                               </div>
                             </div>
                           </div>
@@ -649,17 +656,17 @@ export const TambahView: React.FC<TambahViewProps> = ({
                           <button
                             type="button"
                             onClick={() => handleRemoveComponent(comp.sku)}
-                            className="p-2 text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-colors"
+                            className="p-2 text-slate-400 hover:text-rose-400 hover:bg-rose-500/20 rounded-xl transition-all border border-white/10"
                             title="Hapus komponen dari paket"
                           >
-                            <Trash2 size={15} />
+                            <Trash2 size={15} strokeWidth={2.5} />
                           </button>
                         </div>
                       );
                     })}
                   </div>
                 ) : (
-                  <div className="py-6 text-center text-slate-500 text-xs border border-dashed border-white/10 rounded-xl">
+                  <div className="py-6 text-center text-slate-400 text-xs border-2 border-dashed border-purple-500/30 rounded-2xl bg-purple-950/10">
                     Belum ada barang komponen ditambahkan. Pilih barang di atas dan klik tombol tambah (+).
                   </div>
                 )}
@@ -667,14 +674,14 @@ export const TambahView: React.FC<TambahViewProps> = ({
 
               {/* Live Capacity Card */}
               {bundleComponents.length > 0 && (
-                <div className="p-4 rounded-2xl bg-gradient-to-r from-purple-900/30 to-indigo-900/30 border border-purple-500/30 flex items-center justify-between">
+                <div className="p-4 rounded-2xl bg-gradient-to-r from-purple-950/60 to-indigo-950/60 border-2 border-purple-500/40 flex items-center justify-between shadow-md">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-purple-500/20 text-purple-400 flex items-center justify-center border border-purple-500/30">
-                      <Boxes size={20} />
+                    <div className="w-11 h-11 rounded-xl bg-purple-500/25 text-purple-300 flex items-center justify-center border border-purple-500/40 shrink-0">
+                      <Boxes size={22} />
                     </div>
                     <div>
-                      <div className="text-xs font-bold text-white">Estimasi Kapasitas Stok Paket</div>
-                      <div className="text-[11px] text-slate-300">
+                      <div className="text-sm font-black text-white">Estimasi Kapasitas Stok Paket</div>
+                      <div className="text-xs text-slate-300">
                         Berdasarkan stok komponen di gudang saat ini
                       </div>
                     </div>
@@ -683,17 +690,17 @@ export const TambahView: React.FC<TambahViewProps> = ({
                     <div className="text-2xl font-black text-purple-300">
                       {liveCapacity} <span className="text-xs font-bold text-purple-200">Paket</span>
                     </div>
-                    <div className="text-[10px] text-slate-400">Siap Dibuat / Dikirim</div>
+                    <div className="text-[11px] text-slate-400 font-medium">Siap Dirakit / Dikirim</div>
                   </div>
                 </div>
               )}
 
               <button 
                 type="submit" 
-                className="w-full mt-2 text-white bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:from-indigo-500 hover:to-pink-500 focus:ring-4 focus:ring-purple-500/30 font-bold rounded-xl text-sm px-5 py-4 text-center transition-all active:scale-[0.98] shadow-lg shadow-purple-500/25 flex justify-center items-center gap-2"
+                className="w-full mt-3 text-white bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:from-indigo-500 hover:to-pink-500 focus:ring-4 focus:ring-purple-500/30 font-black rounded-2xl text-sm px-5 py-4 text-center transition-all active:scale-[0.98] shadow-xl shadow-purple-500/25 flex justify-center items-center gap-2 border-2 border-purple-400/40"
               >
                 <Boxes size={18} strokeWidth={2.5} />
-                Simpan & Daftarkan Barang Paket
+                <span>Simpan & Daftarkan Barang Paket ke Database</span>
               </button>
             </form>
           )}
@@ -701,30 +708,30 @@ export const TambahView: React.FC<TambahViewProps> = ({
       </div>
 
       {sessionItems.length > 0 && (
-        <div className="glass-panel rounded-3xl p-6 shadow-xl relative overflow-hidden">
-          <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-            <CheckCircle2 size={20} className="text-emerald-400" />
+        <div className="glass-panel rounded-3xl p-6 shadow-xl relative overflow-hidden border-2 border-emerald-500/40 bg-gradient-to-br from-emerald-950/20 via-slate-900/90 to-slate-900/95">
+          <h3 className="text-lg font-black text-white mb-4 flex items-center gap-2">
+            <CheckCircle2 size={22} className="text-emerald-400" />
             Daftar Item Baru Ditambahkan Sesi Ini
           </h3>
           <div className="space-y-3">
             {sessionItems.map((item) => (
-              <div key={item.sku} className="p-4 bg-white/5 border border-white/5 rounded-2xl flex justify-between items-center">
+              <div key={item.sku} className="p-4 bg-slate-900/80 border-2 border-white/10 rounded-2xl flex justify-between items-center hover:border-emerald-500/40 transition-all shadow-sm">
                 <div>
                   <div className="font-bold text-white flex items-center gap-2">
                     {item.name}
                     {item.isBundle && (
-                      <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                      <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-purple-500/25 text-purple-300 border border-purple-500/40">
                         📦 Paket ({item.bundleItems?.length || 0} barang)
                       </span>
                     )}
                   </div>
-                  <div className="text-xs text-slate-500 uppercase tracking-wider">{item.sku}</div>
+                  <div className="text-xs text-cyan-400 font-mono font-semibold mt-0.5">{item.sku}</div>
                 </div>
                 <div className="text-right">
-                  <div className="text-sm font-bold text-emerald-400">
+                  <div className="text-sm font-black text-emerald-400">
                     {item.isBundle ? `${calculateBundleStock(item, inventoryData)} Paket` : `${item.stock} Unit`}
                   </div>
-                  <div className="text-[10px] text-slate-500">Min. Alert: {item.minStock}</div>
+                  <div className="text-[10px] text-slate-400">Min. Alert: {item.minStock}</div>
                 </div>
               </div>
             ))}

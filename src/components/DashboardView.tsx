@@ -91,6 +91,14 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
     return true;
   });
 
+  const handleSearchChange = (val: string) => {
+    setSearchQuery(val);
+  };
+
+  const handleFilterChange = (filter: 'semua' | 'paket' | 'satuan' | 'aman' | 'tipis' | 'habis') => {
+    setActiveFilter(filter);
+  };
+
   const handleExportCSV = () => {
     const ok = downloadInventoryCSV(filteredInventory);
     if (ok) showToast('Laporan Stok Excel (CSV) berhasil diunduh', 'success');
@@ -170,7 +178,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 <input 
                   type="text" 
                   value={searchQuery}
-                  onChange={e => setSearchQuery(e.target.value)}
+                  onChange={e => handleSearchChange(e.target.value)}
                   placeholder="Cari SKU / Nama Barang..." 
                   className="w-full bg-slate-900/50 border border-white/10 text-sm rounded-xl focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 block pl-10 pr-4 py-2.5 placeholder-slate-500 text-white transition-all outline-none"
                 />
@@ -217,7 +225,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               return (
                 <button
                   key={filter}
-                  onClick={() => setActiveFilter(filter)}
+                  onClick={() => handleFilterChange(filter)}
                   className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all ${
                     isSelected
                       ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30 shadow-sm'
@@ -230,109 +238,151 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             })}
           </div>
 
-          {/* Table */}
-          <div className="overflow-x-auto max-h-[400px] custom-scrollbar">
-            <table className="w-full text-left text-sm text-slate-300 relative">
-              <thead className="bg-slate-800/80 backdrop-blur-md text-[10px] uppercase tracking-widest text-slate-400 border-b border-white/5 sticky top-0 z-10">
-                <tr>
-                  <th scope="col" className="px-5 py-4 font-semibold w-1/4 whitespace-nowrap">SKU</th>
-                  <th scope="col" className="px-5 py-4 font-semibold w-1/2 min-w-[150px]">Item</th>
-                  <th scope="col" className="px-5 py-4 font-semibold text-right w-1/4">Stok / Kapasitas</th>
-                  <th scope="col" className="px-5 py-4 font-semibold text-center whitespace-nowrap">Status</th>
-                  <th scope="col" className="px-5 py-4 font-semibold text-center whitespace-nowrap">Aksi</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-white/5">
-                {filteredInventory.map(item => {
-                  const effectiveStock = item.isBundle 
-                    ? calculateBundleStock(item, inventoryData) 
-                    : item.stock;
-                  const min = item.minStock !== undefined ? item.minStock : 5;
-                  let statusClass = 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20';
-                  let statusText = 'Aman';
+          {/* Scrollable Table View with Crisp, Legible Typography */}
+          <div className="p-2 sm:p-4">
+            <div className="overflow-x-auto overflow-y-auto max-h-[520px] custom-scrollbar rounded-2xl border border-white/10 bg-slate-950/40">
+              <table className="w-full text-left text-xs text-slate-300 relative border-collapse">
+                <thead className="bg-slate-900/95 backdrop-blur-md text-[10px] sm:text-[11px] uppercase tracking-wider text-slate-400 border-b border-white/10 sticky top-0 z-10 font-bold">
+                  <tr>
+                    <th scope="col" className="px-3 sm:px-4 py-3 whitespace-nowrap w-24 sm:w-28">SKU</th>
+                    <th scope="col" className="px-3 sm:px-4 py-3 min-w-[170px]">ITEM</th>
+                    <th scope="col" className="px-3 sm:px-4 py-3 text-right whitespace-nowrap">STOK / KAPASITAS</th>
+                    <th scope="col" className="px-3 sm:px-4 py-3 text-center whitespace-nowrap">STATUS</th>
+                    <th scope="col" className="px-3 sm:px-4 py-3 text-center whitespace-nowrap">AKSI</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-white/5">
+                  {filteredInventory.map(item => {
+                    const effectiveStock = item.isBundle 
+                      ? calculateBundleStock(item, inventoryData) 
+                      : item.stock;
+                    const min = item.minStock !== undefined ? item.minStock : 5;
+                    let statusClass = 'text-emerald-300 bg-emerald-500/20 border-emerald-500/40';
+                    let rowBgClass = 'hover:bg-white/[0.03]';
+                    let statusText = 'Aman';
+                    let stockTextColor = 'text-emerald-400';
 
-                  if (effectiveStock === 0) {
-                    statusClass = 'text-rose-400 bg-rose-500/10 border-rose-500/20';
-                    statusText = 'Habis';
-                  } else if (effectiveStock <= min) {
-                    statusClass = 'text-amber-400 bg-amber-500/10 border-amber-500/20';
-                    statusText = 'Tipis';
-                  }
+                    if (item.isBundle) {
+                      statusClass = 'text-purple-300 bg-purple-500/20 border-purple-500/40';
+                      rowBgClass = 'hover:bg-purple-500/[0.04]';
+                      statusText = 'Paket';
+                      stockTextColor = 'text-purple-300';
+                    } else if (effectiveStock === 0) {
+                      statusClass = 'text-rose-300 bg-rose-500/20 border-rose-500/40';
+                      rowBgClass = 'hover:bg-rose-500/[0.04]';
+                      statusText = 'Habis';
+                      stockTextColor = 'text-rose-400';
+                    } else if (effectiveStock <= min) {
+                      statusClass = 'text-amber-300 bg-amber-500/20 border-amber-500/40';
+                      rowBgClass = 'hover:bg-amber-500/[0.04]';
+                      statusText = 'Tipis';
+                      stockTextColor = 'text-amber-400';
+                    }
 
-                  return (
-                    <tr key={item.sku} className="hover:bg-white/[0.02] transition-colors">
-                      <td className="px-5 py-4 font-mono text-xs text-slate-400">{item.sku}</td>
-                      <td className="px-5 py-4 font-semibold text-white">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span>{item.name}</span>
-                          {item.isBundle && (
-                            <button
-                              type="button"
-                              onClick={() => setSelectedBundleBreakdown(item)}
-                              className="px-2 py-0.5 rounded text-[10px] font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30 hover:bg-purple-500/30 transition-all flex items-center gap-1 cursor-pointer"
-                              title="Klik untuk melihat rincian barang paket"
-                            >
-                              <Boxes size={11} />
-                              Paket ({item.bundleItems?.length || 0})
-                            </button>
-                          )}
-                        </div>
-                      </td>
-                      <td className="px-5 py-4 font-bold text-right text-lg">
-                        <span className={item.isBundle ? 'text-purple-300' : 'text-white'}>
-                          {effectiveStock}
-                        </span>
-                        <span className="text-[11px] font-normal text-slate-400 ml-1">
-                          {item.isBundle ? 'pkt' : 'unit'}
-                        </span>
-                      </td>
-                      <td className="px-5 py-4 text-center">
-                        <span className={`px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded-md border ${statusClass}`}>
-                          {statusText}
-                        </span>
-                      </td>
-                      <td className="px-5 py-4 text-center">
-                        <div className="flex items-center justify-center gap-1.5">
-                          {item.isBundle && (
-                            <button 
-                              onClick={() => setSelectedBundleBreakdown(item)} 
-                              className="p-2 bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 rounded-lg transition-colors border border-purple-500/20" 
-                              title="Lihat Rincian Komponen Paket"
-                            >
-                              <Eye size={14} strokeWidth={2.5} />
-                            </button>
-                          )}
-                          {isAdmin && (
-                            <>
+                    return (
+                      <tr key={item.sku} className={`transition-colors ${rowBgClass}`}>
+                        {/* SKU */}
+                        <td className="px-3 sm:px-4 py-3 font-mono text-[11px] sm:text-xs font-bold text-slate-300 whitespace-nowrap align-top sm:align-middle">
+                          <span className="bg-black/40 px-2 py-1 rounded border border-white/5 inline-block">
+                            {item.sku}
+                          </span>
+                        </td>
+
+                        {/* ITEM NAME (smaller, clear, legible font) */}
+                        <td className="px-3 sm:px-4 py-3 align-top sm:align-middle">
+                          <div className="flex flex-col gap-1">
+                            <span className="text-xs sm:text-[13px] font-semibold text-white leading-snug break-words max-w-xs sm:max-w-md">
+                              {item.name}
+                            </span>
+                            {item.isBundle && (
+                              <div className="flex items-center gap-1">
+                                <button
+                                  type="button"
+                                  onClick={() => setSelectedBundleBreakdown(item)}
+                                  className="px-2 py-0.5 rounded text-[10px] font-bold bg-purple-500/25 text-purple-300 border border-purple-500/40 hover:bg-purple-500/35 transition-all inline-flex items-center gap-1 cursor-pointer w-fit"
+                                  title="Klik untuk melihat rincian barang paket"
+                                >
+                                  <Boxes size={11} />
+                                  <span>Paket ({item.bundleItems?.length || 0})</span>
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        </td>
+
+                        {/* STOK / KAPASITAS */}
+                        <td className="px-3 sm:px-4 py-3 text-right whitespace-nowrap align-top sm:align-middle">
+                          <span className={`text-sm sm:text-base font-black ${stockTextColor}`}>
+                            {effectiveStock}
+                          </span>
+                          <span className="text-[11px] font-normal text-slate-400 ml-1">
+                            {item.isBundle ? 'pkt' : 'unit'}
+                          </span>
+                        </td>
+
+                        {/* STATUS */}
+                        <td className="px-3 sm:px-4 py-3 text-center whitespace-nowrap align-top sm:align-middle">
+                          <span className={`px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-md border inline-block ${statusClass}`}>
+                            {statusText}
+                          </span>
+                        </td>
+
+                        {/* AKSI */}
+                        <td className="px-3 sm:px-4 py-3 text-center whitespace-nowrap align-top sm:align-middle">
+                          <div className="flex items-center justify-center gap-1">
+                            {item.isBundle && (
                               <button 
-                                onClick={() => onPromptEdit(item.sku)} 
-                                className="p-2 bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 rounded-lg transition-colors border border-blue-500/20" 
-                                title="Edit Barang"
+                                onClick={() => setSelectedBundleBreakdown(item)} 
+                                className="p-1.5 bg-purple-500/15 hover:bg-purple-500/25 text-purple-300 rounded-lg transition-colors border border-purple-500/30" 
+                                title="Lihat Rincian Komponen Paket"
                               >
-                                <Pencil size={14} strokeWidth={2.5} />
+                                <Eye size={13} strokeWidth={2.2} />
                               </button>
-                              <button 
-                                onClick={() => onPromptDelete(item.sku)} 
-                                className="p-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 rounded-lg transition-colors border border-rose-500/20" 
-                                title="Hapus Barang"
-                              >
-                                <Trash2 size={14} strokeWidth={2.5} />
-                              </button>
-                            </>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                            )}
+                            {isAdmin && (
+                              <>
+                                <button 
+                                  onClick={() => onPromptEdit(item.sku)} 
+                                  className="p-1.5 bg-blue-500/15 hover:bg-blue-500/25 text-blue-400 rounded-lg transition-colors border border-blue-500/30" 
+                                  title="Edit Barang"
+                                >
+                                  <Pencil size={13} strokeWidth={2.2} />
+                                </button>
+                                <button 
+                                  onClick={() => onPromptDelete(item.sku)} 
+                                  className="p-1.5 bg-rose-500/15 hover:bg-rose-500/25 text-rose-400 rounded-lg transition-colors border border-rose-500/30" 
+                                  title="Hapus Barang"
+                                >
+                                  <Trash2 size={13} strokeWidth={2.2} />
+                                </button>
+                              </>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           </div>
 
           {filteredInventory.length === 0 && (
             <div className="flex flex-col items-center justify-center py-10 opacity-50">
               <Package size={48} className="mb-3 text-slate-500" />
               <p className="text-sm font-medium text-slate-300">Tidak ada data ditemukan</p>
+            </div>
+          )}
+
+          {/* Simple Clean Summary Footer */}
+          {filteredInventory.length > 0 && (
+            <div className="px-5 py-3 bg-black/30 border-t border-white/10 flex items-center justify-between text-xs text-slate-400">
+              <span>
+                Total Data: <strong className="text-white font-semibold">{filteredInventory.length}</strong> barang
+              </span>
+              <span className="text-[11px] text-slate-500 hidden sm:inline">
+                Scroll di dalam tabel untuk melihat semua data barang
+              </span>
             </div>
           )}
         </div>
@@ -364,39 +414,72 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             {recentTransactions.map(tx => {
               const isMasuk = tx.type === 'Masuk';
               const isRusak = tx.type === 'Rusak';
-              let iconColor = 'text-rose-400 bg-rose-500/20';
+              const isOpname = tx.note && (tx.note.includes('Opname') || tx.note.includes('Selisih'));
+
+              let cardBorder = 'border-2 border-rose-500/40 hover:border-rose-400 bg-gradient-to-r from-rose-950/20 via-slate-900/80 to-slate-900/90';
+              let iconColor = 'text-rose-400 bg-rose-500/20 border border-rose-500/40';
+              let badgeColor = 'text-rose-300 bg-rose-500/20 border border-rose-500/40';
               let textColor = 'text-rose-400';
               let IconComponent = ArrowDownRight;
+              let typeLabel = 'Keluar';
 
-              if (isRusak) {
-                iconColor = 'text-amber-400 bg-amber-500/20';
+              if (isOpname) {
+                cardBorder = 'border-2 border-indigo-500/40 hover:border-indigo-400 bg-gradient-to-r from-indigo-950/20 via-slate-900/80 to-slate-900/90';
+                iconColor = 'text-indigo-400 bg-indigo-500/20 border border-indigo-500/40';
+                badgeColor = 'text-indigo-300 bg-indigo-500/20 border border-indigo-500/40';
+                textColor = 'text-indigo-400';
+                IconComponent = FileText;
+                typeLabel = 'Opname';
+              } else if (isRusak) {
+                cardBorder = 'border-2 border-amber-500/40 hover:border-amber-400 bg-gradient-to-r from-amber-950/20 via-slate-900/80 to-slate-900/90';
+                iconColor = 'text-amber-400 bg-amber-500/20 border border-amber-500/40';
+                badgeColor = 'text-amber-300 bg-amber-500/20 border border-amber-500/40';
                 textColor = 'text-amber-400';
                 IconComponent = AlertTriangle;
+                typeLabel = 'Rusak';
               } else if (isMasuk) {
-                iconColor = 'text-emerald-400 bg-emerald-500/20';
+                cardBorder = 'border-2 border-emerald-500/40 hover:border-emerald-400 bg-gradient-to-r from-emerald-950/20 via-slate-900/80 to-slate-900/90';
+                iconColor = 'text-emerald-400 bg-emerald-500/20 border border-emerald-500/40';
+                badgeColor = 'text-emerald-300 bg-emerald-500/20 border border-emerald-500/40';
                 textColor = 'text-emerald-400';
                 IconComponent = ArrowUpRight;
+                typeLabel = 'Masuk';
               }
 
               const dateObj = new Date(tx.date);
               const timeStr = `${dateObj.getHours().toString().padStart(2, '0')}:${dateObj.getMinutes().toString().padStart(2, '0')}`;
 
               return (
-                <div key={tx.id} className="flex items-center justify-between p-3 rounded-2xl bg-slate-800/50 border border-white/5">
-                  <div className="flex items-center gap-3">
-                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${iconColor}`}>
-                      <IconComponent size={18} strokeWidth={2.5} />
+                <div 
+                  key={tx.id} 
+                  className={`flex items-center justify-between p-3.5 rounded-2xl transition-all shadow-md ${cardBorder}`}
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 shadow-inner ${iconColor}`}>
+                      <IconComponent size={20} strokeWidth={2.5} />
                     </div>
-                    <div>
-                      <h4 className="text-sm font-bold text-white leading-tight truncate max-w-[140px] sm:max-w-xs">{tx.name}</h4>
-                      <div className="text-[10px] text-slate-400 flex items-center gap-1 mt-0.5">
-                        <span>{tx.type}</span> • <span>{timeStr}</span>
+                    <div className="min-w-0">
+                      <h4 className="text-xs sm:text-[13px] font-semibold text-white leading-snug break-words max-w-[200px] sm:max-w-md">{tx.name}</h4>
+                      <div className="text-[10px] sm:text-[11px] text-slate-300 flex items-center gap-1.5 mt-1 flex-wrap">
+                        <span className={`px-2 py-0.5 text-[9px] sm:text-[10px] font-bold rounded ${badgeColor}`}>
+                          {typeLabel}
+                        </span>
+                        <span className="font-mono text-slate-400">{timeStr}</span>
+                        {tx.note && tx.note !== '-' && (
+                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-white/10 text-slate-300 border border-white/10 truncate max-w-[150px]">
+                            {tx.note}
+                          </span>
+                        )}
                       </div>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <div className={`text-sm font-bold ${textColor}`}>{isMasuk ? '+' : '-'}{tx.qty}</div>
-                    <div className="text-[10px] text-slate-500">{tx.user}</div>
+                  <div className="text-right shrink-0">
+                    <div className={`text-lg font-black leading-none ${textColor}`}>
+                      {isMasuk ? '+' : '-'}{tx.qty}
+                    </div>
+                    <div className="text-[10px] text-slate-400 mt-1 capitalize font-medium">
+                      oleh <span className="text-slate-300 font-semibold">{tx.user}</span>
+                    </div>
                   </div>
                 </div>
               );

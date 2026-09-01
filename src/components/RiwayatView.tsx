@@ -15,8 +15,7 @@ import {
   Plus, 
   Pencil, 
   Trash2, 
-  Wrench, 
-  ShieldCheck 
+  Wrench
 } from 'lucide-react';
 import { Transaction, AppUser, ViewType } from '../types';
 import { downloadTransactionsCSV, downloadTransactionsPDF } from '../lib/exportUtils';
@@ -104,7 +103,7 @@ export const RiwayatView: React.FC<RiwayatViewProps> = ({
 
   return (
     <section className="view-enter">
-      <div className="glass-panel rounded-3xl overflow-hidden shadow-xl shadow-black/10 flex flex-col h-[75vh]">
+      <div className="glass-panel rounded-3xl overflow-hidden shadow-xl shadow-black/10 flex flex-col max-h-[85vh]">
         {/* Top bar */}
         <div className="px-5 py-4 border-b border-white/10 bg-white/[0.02] flex items-center justify-between flex-wrap gap-3">
           <div className="flex items-center gap-3">
@@ -240,31 +239,39 @@ export const RiwayatView: React.FC<RiwayatViewProps> = ({
           })}
         </div>
 
-        {/* History List */}
-        <div className="flex-1 overflow-y-auto custom-scrollbar p-5">
-          <div className="space-y-3">
+        {/* History List - Scrollable */}
+        <div className="flex-1 overflow-y-auto custom-scrollbar p-3 sm:p-5">
+          <div className="space-y-2.5">
             {filteredTransactions.map(tx => {
               const isMasuk = tx.type === 'Masuk';
               const isRusak = tx.type === 'Rusak';
               const isOpname = tx.note && (tx.note.includes('Opname') || tx.note.includes('Selisih'));
 
-              let iconColor = 'text-rose-400 bg-rose-500/20';
+              let cardBorder = 'border-2 border-rose-500/40 hover:border-rose-400 bg-gradient-to-r from-rose-950/20 via-slate-900/80 to-slate-900/90';
+              let iconColor = 'text-rose-400 bg-rose-500/20 border border-rose-500/40';
+              let badgeColor = 'text-rose-300 bg-rose-500/20 border border-rose-500/40';
               let typeLabel = 'Keluar';
               let textColor = 'text-rose-400';
               let IconComponent = ArrowDownRight;
 
               if (isOpname) {
-                iconColor = 'text-indigo-400 bg-indigo-500/20';
+                cardBorder = 'border-2 border-indigo-500/40 hover:border-indigo-400 bg-gradient-to-r from-indigo-950/20 via-slate-900/80 to-slate-900/90';
+                iconColor = 'text-indigo-400 bg-indigo-500/20 border border-indigo-500/40';
+                badgeColor = 'text-indigo-300 bg-indigo-500/20 border border-indigo-500/40';
                 typeLabel = 'Opname';
                 textColor = tx.qty > 0 ? (isMasuk ? 'text-emerald-400' : 'text-rose-400') : 'text-indigo-400';
                 IconComponent = FileCheck;
               } else if (isRusak) {
-                iconColor = 'text-amber-400 bg-amber-500/20';
+                cardBorder = 'border-2 border-amber-500/40 hover:border-amber-400 bg-gradient-to-r from-amber-950/20 via-slate-900/80 to-slate-900/90';
+                iconColor = 'text-amber-400 bg-amber-500/20 border border-amber-500/40';
+                badgeColor = 'text-amber-300 bg-amber-500/20 border border-amber-500/40';
                 typeLabel = 'Rusak';
                 textColor = 'text-amber-400';
                 IconComponent = AlertTriangle;
               } else if (isMasuk) {
-                iconColor = 'text-emerald-400 bg-emerald-500/20';
+                cardBorder = 'border-2 border-emerald-500/40 hover:border-emerald-400 bg-gradient-to-r from-emerald-950/20 via-slate-900/80 to-slate-900/90';
+                iconColor = 'text-emerald-400 bg-emerald-500/20 border border-emerald-500/40';
+                badgeColor = 'text-emerald-300 bg-emerald-500/20 border border-emerald-500/40';
                 typeLabel = 'Masuk';
                 textColor = 'text-emerald-400';
                 IconComponent = ArrowUpRight;
@@ -275,43 +282,54 @@ export const RiwayatView: React.FC<RiwayatViewProps> = ({
               const timeStr = `${dateObj.getHours().toString().padStart(2, '0')}:${dateObj.getMinutes().toString().padStart(2, '0')}`;
 
               return (
-                <div key={tx.id || `${tx.sku}-${tx.date}`} className="flex flex-col p-4 rounded-2xl bg-slate-800/50 border border-white/5 hover:bg-slate-800 transition-colors">
-                  <div className="flex items-start justify-between mb-2">
-                    <div className="flex items-center gap-3">
-                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${iconColor}`}>
-                        <IconComponent size={18} strokeWidth={2.5} />
+                <div 
+                  key={tx.id || `${tx.sku}-${tx.date}`} 
+                  className={`flex flex-col p-3.5 sm:p-4 rounded-2xl transition-all shadow-md ${cardBorder}`}
+                >
+                  <div className="flex items-start justify-between gap-3 mb-2">
+                    <div className="flex items-start gap-3 min-w-0">
+                      <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center shrink-0 shadow-inner mt-0.5 ${iconColor}`}>
+                        <IconComponent size={18} strokeWidth={2.2} />
                       </div>
-                      <div>
-                        <h4 className="text-sm font-bold text-white leading-tight">{tx.name}</h4>
-                        <div className="text-[11px] font-mono text-slate-400 mt-0.5">{tx.sku}</div>
+                      <div className="min-w-0">
+                        <h4 className="text-xs sm:text-[13px] font-semibold text-white leading-snug break-words">
+                          {tx.name}
+                        </h4>
+                        <div className="text-[10px] sm:text-[11px] font-mono text-slate-400 mt-0.5">
+                          SKU: {tx.sku}
+                        </div>
                       </div>
                     </div>
                     <div className="text-right shrink-0">
-                      <div className={`text-lg font-black ${textColor}`}>
+                      <div className={`text-base sm:text-lg font-black leading-none ${textColor}`}>
                         {isMasuk && !isOpname ? '+' : (isOpname && tx.type === 'Masuk' ? '+' : '-')}{tx.qty}
                       </div>
-                      <div className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">{typeLabel}</div>
+                      <div className="mt-1">
+                        <span className={`inline-block px-2 py-0.5 text-[9px] sm:text-[10px] uppercase font-bold tracking-wider rounded ${badgeColor}`}>
+                          {typeLabel}
+                        </span>
+                      </div>
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between text-[11px] text-slate-400 pt-3 border-t border-white/5">
+                  <div className="flex items-center justify-between text-[10px] sm:text-[11px] text-slate-400 pt-2.5 border-t border-white/10 flex-wrap gap-1">
                     <div className="flex items-center gap-1.5">
-                      <UserIcon size={12} />
-                      <span className="capitalize">{tx.user}</span>
+                      <UserIcon size={11} />
+                      <span className="capitalize text-slate-300 font-medium">{tx.user}</span>
                       {tx.editedBy && (
-                        <span className="text-[10px] px-1.5 py-0.2 rounded bg-purple-500/20 text-purple-300 border border-purple-500/20 font-medium">
+                        <span className="text-[9px] px-1.5 py-0.2 rounded bg-purple-500/20 text-purple-300 border border-purple-500/20 font-medium">
                           (Diedit: {tx.editedBy})
                         </span>
                       )}
                     </div>
-                    <div className="flex items-center gap-1.5 text-right">
+                    <div className="flex items-center gap-1.5 text-right font-mono">
                       {dateStr} • {timeStr}
-                      <Clock size={12} />
+                      <Clock size={11} />
                     </div>
                   </div>
 
                   {tx.note && tx.note !== '-' && (
-                    <div className="mt-2 text-[11px] text-slate-300 bg-black/20 p-2 rounded-lg italic">
+                    <div className="mt-2 text-[10px] sm:text-[11px] text-slate-300 bg-black/30 p-2 rounded-lg italic border border-white/5 leading-relaxed">
                       "{tx.note}"
                     </div>
                   )}
@@ -347,6 +365,18 @@ export const RiwayatView: React.FC<RiwayatViewProps> = ({
             </div>
           )}
         </div>
+
+        {/* Simple Clean Summary Footer */}
+        {filteredTransactions.length > 0 && (
+          <div className="px-5 py-3 bg-black/30 border-t border-white/10 flex items-center justify-between text-xs text-slate-400 shrink-0">
+            <span>
+              Total Riwayat: <strong className="text-white font-semibold">{filteredTransactions.length}</strong> transaksi
+            </span>
+            <span className="text-[11px] text-slate-500 hidden sm:inline">
+              Scroll di dalam daftar untuk melihat riwayat terdahulu
+            </span>
+          </div>
+        )}
       </div>
     </section>
   );

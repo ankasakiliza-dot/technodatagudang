@@ -506,3 +506,65 @@ body.theme-light-minimal ::-webkit-scrollbar-thumb:hover {
 ::-webkit-scrollbar-thumb:hover {
   background: #334155;
 }
+
+/* Light mode card frames and distinct status backgrounds */
+body.theme-light-eyecare .border-emerald-500\/40,
+body.theme-light-warm .border-emerald-500\/40,
+body.theme-light .border-emerald-500\/40,
+body.theme-light-aurora .border-emerald-500\/40,
+body.theme-light-minimal .border-emerald-500\/40 {
+  border-color: #10b981 !important;
+  background: #f0fdf4 !important;
+}
+
+body.theme-light-eyecare .border-amber-500\/40,
+body.theme-light-eyecare .border-amber-500\/50,
+body.theme-light-warm .border-amber-500\/40,
+body.theme-light-warm .border-amber-500\/50,
+body.theme-light .border-amber-500\/40,
+body.theme-light .border-amber-500\/50,
+body.theme-light-aurora .border-amber-500\/40,
+body.theme-light-aurora .border-amber-500\/50,
+body.theme-light-minimal .border-amber-500\/40,
+body.theme-light-minimal .border-amber-500\/50 {
+  border-color: #f59e0b !important;
+  background: #fffbeb !important;
+}
+
+body.theme-light-eyecare .border-rose-500\/40,
+body.theme-light-eyecare .border-rose-500\/50,
+body.theme-light-warm .border-rose-500\/40,
+body.theme-light-warm .border-rose-500\/50,
+body.theme-light .border-rose-500\/40,
+body.theme-light .border-rose-500\/50,
+body.theme-light-aurora .border-rose-500\/40,
+body.theme-light-aurora .border-rose-500\/50,
+body.theme-light-minimal .border-rose-500\/40,
+body.theme-light-minimal .border-rose-500\/50 {
+  border-color: #f43f5e !important;
+  background: #fff1f2 !important;
+}
+
+body.theme-light-eyecare .border-purple-500\/40,
+body.theme-light-eyecare .border-purple-500\/50,
+body.theme-light-warm .border-purple-500\/40,
+body.theme-light-warm .border-purple-500\/50,
+body.theme-light .border-purple-500\/40,
+body.theme-light .border-purple-500\/50,
+body.theme-light-aurora .border-purple-500\/40,
+body.theme-light-aurora .border-purple-500\/50,
+body.theme-light-minimal .border-purple-500\/40,
+body.theme-light-minimal .border-purple-500\/50 {
+  border-color: #a855f7 !important;
+  background: #faf5ff !important;
+}
+
+body.theme-light-eyecare .border-indigo-500\/40,
+body.theme-light-warm .border-indigo-500\/40,
+body.theme-light .border-indigo-500\/40,
+body.theme-light-aurora .border-indigo-500\/40,
+body.theme-light-minimal .border-indigo-500\/40 {
+  border-color: #6366f1 !important;
+  background: #eef2ff !important;
+}
+
