@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { Package, Loader2, Sun, Moon } from 'lucide-react';
+import { Loader2, Sun, Moon } from 'lucide-react';
 import { AppUser } from '../types';
 import { isThemeLight } from '../lib/themeConfig';
+import { AppLogo } from './AppLogo';
 
 interface LoginScreenProps {
   usersData: AppUser[];
@@ -74,15 +75,21 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
           </div>
         )}
 
-        <div className="flex items-center gap-3 mb-8 relative z-10 justify-center">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-blue-600 to-cyan-400 flex items-center justify-center font-bold text-white shadow-[0_0_20px_rgba(56,189,248,0.4)]">
-            <Package size={26} strokeWidth={2.5} />
+        <div className="flex flex-col items-center justify-center mb-7 relative z-10 text-center">
+          <div className="relative mb-3 group">
+            <div className="absolute -inset-2 bg-gradient-to-r from-red-600/30 via-red-500/20 to-amber-500/20 rounded-2xl blur-lg opacity-80 group-hover:opacity-100 transition-opacity"></div>
+            <AppLogo size="lg" variant="transparent" showGlow />
           </div>
           <div>
-            <h1 className="text-2xl font-extrabold tracking-tight text-white">
-              Techno<span className="text-cyan-400">Sync</span>
+            <h1 className="text-xl sm:text-2xl font-black tracking-wider text-white flex items-center justify-center gap-2">
+              <span>TECHNO</span>
+              <span className="text-red-400 font-bold text-xs sm:text-sm px-2 py-0.5 rounded-md bg-red-500/20 border border-red-500/30 tracking-widest uppercase">
+                OTOPARTS
+              </span>
             </h1>
-            <p className="text-[10px] text-slate-400 font-medium uppercase tracking-wider">Inventory System</p>
+            <p className="text-[11px] text-slate-400 font-medium uppercase tracking-widest mt-1">
+              Inventory Management System
+            </p>
           </div>
         </div>
 

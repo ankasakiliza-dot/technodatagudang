@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { Package, RefreshCw, Code, Moon, Sun, Palette, Check, Upload } from 'lucide-react';
+import { RefreshCw, Code, Moon, Sun, Palette, Check, Upload } from 'lucide-react';
 import { THEME_OPTIONS, isThemeLight } from '../lib/themeConfig';
+import { AppLogo } from './AppLogo';
 
 interface HeaderProps {
   connectionStatus: string;
@@ -39,12 +40,13 @@ export const Header: React.FC<HeaderProps> = ({
     <header className="sticky top-0 z-40 glass-nav border-b-0 shadow-lg shadow-black/10">
       <div className="max-w-3xl mx-auto px-5 py-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-blue-600 to-cyan-400 flex items-center justify-center font-bold text-white shadow-[0_0_20px_rgba(56,189,248,0.4)]">
-            <Package size={22} strokeWidth={2.5} />
-          </div>
+          <AppLogo size="sm" variant="transparent" showGlow />
           <div>
-            <h1 className="text-lg font-extrabold tracking-tight text-white">
-              Techno<span className="text-cyan-400">Sync</span>
+            <h1 className="text-base sm:text-lg font-black tracking-tight text-white leading-tight flex items-center gap-1.5">
+              <span>TECHNO</span>
+              <span className="text-red-400 font-bold text-[11px] sm:text-xs px-1.5 py-0.5 rounded bg-red-500/20 border border-red-500/30 tracking-wider">
+                OTOPARTS
+              </span>
             </h1>
             <div className="flex items-center gap-1.5 mt-0.5">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
