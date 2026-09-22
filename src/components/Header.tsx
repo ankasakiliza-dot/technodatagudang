@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { RefreshCw, Code, Moon, Sun, Palette, Check, Upload } from 'lucide-react';
+import { RefreshCw, Code, Moon, Sun, Palette, Check, Upload, LayoutGrid, Repeat, PlusSquare, FileCheck, User } from 'lucide-react';
 import { THEME_OPTIONS, isThemeLight } from '../lib/themeConfig';
 import { AppLogo } from './AppLogo';
+import { ViewType, AppUser } from '../types';
 
 interface HeaderProps {
   connectionStatus: string;
@@ -11,6 +12,9 @@ interface HeaderProps {
   onOpenImportModal?: () => void;
   currentTheme: string;
   onSelectTheme: (theme: string) => void;
+  currentView?: ViewType;
+  onSwitchView?: (view: ViewType) => void;
+  currentUser?: AppUser | null;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -20,7 +24,10 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenIntegrationModal,
   onOpenImportModal,
   currentTheme,
-  onSelectTheme
+  onSelectTheme,
+  currentView,
+  onSwitchView,
+  currentUser
 }) => {
   const [themeMenuOpen, setThemeMenuOpen] = useState(false);
   const isLight = isThemeLight(currentTheme);
@@ -37,10 +44,14 @@ export const Header: React.FC<HeaderProps> = ({
   const darkThemes = THEME_OPTIONS.filter(t => t.category === 'dark');
 
   return (
-    <header className="sticky top-0 z-40 glass-nav border-b-0 shadow-lg shadow-black/10">
-      <div className="max-w-3xl mx-auto px-5 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <AppLogo size="sm" variant="transparent" showGlow />
+    <header className="sticky top-0 z-40 glass-nav border-b border-white/10 shadow-lg shadow-black/10">
+      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-3.5 flex items-center justify-between gap-4">
+        {/* Brand / Logo */}
+        <div 
+          onClick={() => onSwitchView?.('dashboard')}
+          className="flex items-center gap-3 cursor-pointer shrink-0 group select-none"
+        >
+          <AppLogo size="sm" showGlow />
           <div>
             <h1 className="text-base sm:text-lg font-black tracking-tight text-white leading-tight flex items-center gap-1.5">
               <span>TECHNO</span>
@@ -57,7 +68,74 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
         </div>
 
-        <div className="flex items-center gap-2 relative">
+        {/* Desktop Navigation Tabs (Visible on Laptop / PC) */}
+        {onSwitchView && currentView && (
+          <nav className="hidden md:flex items-center gap-1.5 bg-slate-950/60 p-1.5 rounded-2xl border border-white/10 shadow-inner backdrop-blur-md">
+            <button
+              onClick={() => onSwitchView('dashboard')}
+              className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${
+                currentView === 'dashboard'
+                  ? 'bg-red-500/25 text-white border border-red-500/50 shadow-md shadow-red-500/10'
+                  : 'text-slate-400 hover:text-white hover:bg-white/5 border border-transparent'
+              }`}
+            >
+              <LayoutGrid size={15} />
+              <span>Beranda</span>
+            </button>
+
+            <button
+              onClick={() => onSwitchView('transaksi')}
+              className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${
+                currentView === 'transaksi'
+                  ? 'bg-red-500/25 text-white border border-red-500/50 shadow-md shadow-red-500/10'
+                  : 'text-slate-400 hover:text-white hover:bg-white/5 border border-transparent'
+              }`}
+            >
+              <Repeat size={15} />
+              <span>Transaksi</span>
+            </button>
+
+            <button
+              onClick={() => onSwitchView('tambah')}
+              className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${
+                currentView === 'tambah'
+                  ? 'bg-red-500/25 text-white border border-red-500/50 shadow-md shadow-red-500/10'
+                  : 'text-slate-400 hover:text-white hover:bg-white/5 border border-transparent'
+              }`}
+            >
+              <PlusSquare size={15} />
+              <span>Tambah</span>
+            </button>
+
+            {currentUser?.role === 'admin' && (
+              <button
+                onClick={() => onSwitchView('opname')}
+                className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${
+                  currentView === 'opname'
+                    ? 'bg-red-500/25 text-white border border-red-500/50 shadow-md shadow-red-500/10'
+                    : 'text-slate-400 hover:text-white hover:bg-white/5 border border-transparent'
+                }`}
+              >
+                <FileCheck size={15} />
+                <span>Opname</span>
+              </button>
+            )}
+
+            <button
+              onClick={() => onSwitchView('akun')}
+              className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${
+                currentView === 'akun'
+                  ? 'bg-red-500/25 text-white border border-red-500/50 shadow-md shadow-red-500/10'
+                  : 'text-slate-400 hover:text-white hover:bg-white/5 border border-transparent'
+              }`}
+            >
+              <User size={15} />
+              <span>Akun</span>
+            </button>
+          </nav>
+        )}
+
+        <div className="flex items-center gap-2 relative shrink-0">
           {/* Upload Button */}
           {onOpenImportModal && (
             <button

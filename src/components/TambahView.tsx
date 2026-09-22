@@ -713,7 +713,7 @@ export const TambahView: React.FC<TambahViewProps> = ({
             <CheckCircle2 size={22} className="text-emerald-400" />
             Daftar Item Baru Ditambahkan Sesi Ini
           </h3>
-          <div className="space-y-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {sessionItems.map((item) => (
               <div key={item.sku} className="p-4 bg-slate-900/80 border-2 border-white/10 rounded-2xl flex justify-between items-center hover:border-emerald-500/40 transition-all shadow-sm">
                 <div>

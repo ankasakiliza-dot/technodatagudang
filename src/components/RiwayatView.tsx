@@ -167,8 +167,8 @@ export const RiwayatView: React.FC<RiwayatViewProps> = ({
 
         {/* Filters */}
         <div className="px-5 py-3 border-b border-white/10 bg-white/[0.01]">
-          <div className="flex flex-col sm:flex-row gap-3">
-            <div className="relative w-full">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3">
+            <div className="lg:col-span-6 relative w-full">
               <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
               <input 
                 type="text" 
@@ -179,7 +179,7 @@ export const RiwayatView: React.FC<RiwayatViewProps> = ({
               />
             </div>
 
-            <div className="flex gap-2 w-full sm:w-auto shrink-0 items-center bg-slate-900/50 rounded-xl p-1.5 border border-white/10">
+            <div className="lg:col-span-4 flex gap-2 w-full items-center bg-slate-900/50 rounded-xl p-1.5 border border-white/10">
               <input 
                 type="date" 
                 value={startDate}
@@ -197,11 +197,11 @@ export const RiwayatView: React.FC<RiwayatViewProps> = ({
               />
             </div>
 
-            <div className="relative w-full sm:w-auto shrink-0">
+            <div className="lg:col-span-2 relative w-full">
               <select 
                 value={selectedUser}
                 onChange={e => setSelectedUser(e.target.value)}
-                className="bg-slate-900/50 text-xs text-slate-300 w-full sm:w-32 outline-none px-3 py-2.5 rounded-xl border border-white/10 appearance-none pr-8 cursor-pointer"
+                className="bg-slate-900/50 text-xs text-slate-300 w-full outline-none px-3 py-2.5 rounded-xl border border-white/10 appearance-none pr-8 cursor-pointer"
               >
                 <option value="all">Semua Akun</option>
                 {usersData.map(u => (
@@ -241,7 +241,7 @@ export const RiwayatView: React.FC<RiwayatViewProps> = ({
 
         {/* History List - Scrollable */}
         <div className="flex-1 overflow-y-auto custom-scrollbar p-3 sm:p-5">
-          <div className="space-y-2.5">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
             {filteredTransactions.map(tx => {
               const isMasuk = tx.type === 'Masuk';
               const isRusak = tx.type === 'Rusak';

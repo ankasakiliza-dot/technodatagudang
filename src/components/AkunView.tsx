@@ -72,7 +72,7 @@ export const AkunView: React.FC<AkunViewProps> = ({
 
         {/* Theme Selector Section */}
         {onSelectTheme && (
-          <div className="w-full max-w-md mb-6 relative z-10 p-5 rounded-2xl bg-white/5 border border-white/10 space-y-4">
+          <div className="w-full max-w-3xl mb-6 relative z-10 p-5 rounded-2xl bg-white/5 border border-white/10 space-y-4">
             <div className="flex items-center justify-between">
               <h4 className="text-xs font-bold text-slate-300 flex items-center gap-2 uppercase tracking-wider">
                 <Palette size={15} className="text-cyan-400" />
@@ -88,7 +88,7 @@ export const AkunView: React.FC<AkunViewProps> = ({
               <div className="text-[11px] font-bold text-amber-400 flex items-center gap-1.5 mb-2 uppercase tracking-wider">
                 <Sun size={13} /> Mode Terang (Light Mode)
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
                 {lightThemes.map(t => {
                   const isActive = currentTheme === t.id;
                   return (
@@ -121,7 +121,7 @@ export const AkunView: React.FC<AkunViewProps> = ({
               <div className="text-[11px] font-bold text-cyan-400 flex items-center gap-1.5 mb-2 uppercase tracking-wider">
                 <Moon size={13} /> Mode Gelap (Dark Mode)
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
                 {darkThemes.map(t => {
                   const isActive = currentTheme === t.id;
                   return (
@@ -151,18 +151,9 @@ export const AkunView: React.FC<AkunViewProps> = ({
           </div>
         )}
 
-        {/* Change Password Button */}
-        <button 
-          onClick={onOpenChangePasswordModal} 
-          className="relative z-10 w-full max-w-xs mb-4 text-white bg-white/5 hover:bg-white/10 border border-white/10 focus:ring-4 focus:ring-white/5 font-semibold rounded-xl text-sm px-5 py-3.5 text-center transition-all active:scale-[0.98] flex justify-center items-center gap-2"
-        >
-          <KeyRound size={16} strokeWidth={2.5} />
-          Ubah Password
-        </button>
-
         {/* Teknisi Only - User Management */}
         {isTeknisi && (
-          <div className="w-full max-w-sm mb-6 relative z-10">
+          <div className="w-full max-w-3xl mb-6 relative z-10">
             <div className="flex items-center justify-between mb-3 border-b border-white/10 pb-2">
               <h4 className="text-sm font-bold text-white flex items-center gap-2">
                 <Users size={16} className="text-purple-400" />
@@ -176,14 +167,14 @@ export const AkunView: React.FC<AkunViewProps> = ({
               </button>
             </div>
 
-            <div className="space-y-2 max-h-48 overflow-y-auto custom-scrollbar pr-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 max-h-60 overflow-y-auto custom-scrollbar pr-2">
               {usersData.map(u => {
                 const userIsAdmin = u.role === 'admin';
                 const userIsTeknisi = u.role === 'teknisi';
                 const isMe = u.username === currentUser.username;
 
                 return (
-                  <div key={u.username} className="flex items-center justify-between p-2.5 rounded-xl bg-slate-800/50 border border-white/5">
+                  <div key={u.username} className="flex items-center justify-between p-3 rounded-xl bg-slate-800/50 border border-white/5">
                     <div className="flex items-center gap-3">
                       <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
                         userIsTeknisi 
@@ -228,14 +219,23 @@ export const AkunView: React.FC<AkunViewProps> = ({
           </div>
         )}
 
-        {/* Logout Button */}
-        <button 
-          onClick={onLogout} 
-          className="relative z-10 w-full max-w-xs text-white bg-rose-500/20 hover:bg-rose-500/30 border border-rose-500/50 focus:ring-4 focus:ring-rose-500/30 font-bold rounded-xl text-sm px-5 py-4 text-center transition-all active:scale-[0.98] flex justify-center items-center gap-2"
-        >
-          <LogOut size={18} strokeWidth={2.5} />
-          Keluar Aplikasi
-        </button>
+        {/* Action Buttons */}
+        <div className="flex flex-col sm:flex-row items-center gap-3 w-full max-w-md relative z-10">
+          <button 
+            onClick={onOpenChangePasswordModal} 
+            className="w-full text-white bg-white/5 hover:bg-white/10 border border-white/10 focus:ring-4 focus:ring-white/5 font-semibold rounded-xl text-sm px-5 py-3.5 text-center transition-all active:scale-[0.98] flex justify-center items-center gap-2 cursor-pointer"
+          >
+            <KeyRound size={16} strokeWidth={2.5} />
+            Ubah Password
+          </button>
+          <button 
+            onClick={onLogout} 
+            className="w-full text-white bg-rose-500/20 hover:bg-rose-500/30 border border-rose-500/50 focus:ring-4 focus:ring-rose-500/30 font-bold rounded-xl text-sm px-5 py-3.5 text-center transition-all active:scale-[0.98] flex justify-center items-center gap-2 cursor-pointer"
+          >
+            <LogOut size={16} strokeWidth={2.5} />
+            Keluar Aplikasi
+          </button>
+        </div>
       </div>
     </section>
   );

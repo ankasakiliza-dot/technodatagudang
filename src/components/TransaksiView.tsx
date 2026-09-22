@@ -12,7 +12,9 @@ import {
   CheckCircle2,
   Globe,
   RotateCcw,
-  PenLine
+  PenLine,
+  ShoppingCart,
+  Layers
 } from 'lucide-react';
 import { InventoryItem, CartItem, AppUser, ViewType } from '../types';
 import { calculateBundleStock, checkBundleFulfillable, getBundleComponentBreakdown } from '../lib/bundleUtils';
@@ -229,8 +231,11 @@ export const TransaksiView: React.FC<TransaksiViewProps> = ({
 
   return (
     <section className="view-enter">
-      <div className={`glass-panel rounded-3xl p-5 sm:p-7 shadow-2xl relative overflow-hidden transition-all bg-gradient-to-br ${themeColors.accentGlow} ${themeColors.border}`}>
-        <div className="absolute top-0 right-0 p-8 opacity-5 pointer-events-none text-white">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        {/* Left Column: Form Card */}
+        <div className="lg:col-span-7 xl:col-span-8">
+          <div className={`glass-panel rounded-3xl p-5 sm:p-7 shadow-2xl relative overflow-hidden transition-all bg-gradient-to-br ${themeColors.accentGlow} ${themeColors.border}`}>
+            <div className="absolute top-0 right-0 p-8 opacity-5 pointer-events-none text-white">
           <Repeat size={120} />
         </div>
 
@@ -574,16 +579,24 @@ export const TransaksiView: React.FC<TransaksiViewProps> = ({
             </div>
           </form>
 
-          {/* Cart Section */}
-          {cart.length > 0 && (
-            <div className="mt-6 pt-5 border-t-2 border-white/15">
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-2">
-                  <h3 className="text-sm font-black text-white tracking-wide">Antrean Transaksi</h3>
-                  <span className="px-2 py-0.5 rounded-lg bg-blue-500/30 text-blue-300 border border-blue-500/40 text-xs font-bold">
+            </div>
+          </div>
+        </div>
+
+        {/* Right Column: Antrean Transaksi (Sticky on Desktop) */}
+        <div className="lg:col-span-5 xl:col-span-4 lg:sticky lg:top-24 space-y-4">
+          <div className="glass-panel rounded-3xl p-5 sm:p-6 shadow-2xl border-2 border-white/10 relative overflow-hidden bg-slate-900/80 backdrop-blur-xl">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <ShoppingCart size={18} className="text-cyan-400" />
+                <h3 className="text-sm font-black text-white tracking-wide">Antrean Transaksi</h3>
+                {cart.length > 0 && (
+                  <span className="px-2 py-0.5 rounded-lg bg-cyan-500/30 text-cyan-300 border border-cyan-500/40 text-xs font-bold">
                     {cart.length} item
                   </span>
-                </div>
+                )}
+              </div>
+              {cart.length > 0 && (
                 <button 
                   type="button" 
                   onClick={handleClearCart} 
@@ -591,63 +604,75 @@ export const TransaksiView: React.FC<TransaksiViewProps> = ({
                 >
                   Kosongkan
                 </button>
-              </div>
-
-              <div className="space-y-2 max-h-56 overflow-y-auto custom-scrollbar pr-1 mb-4">
-                {cart.map((item) => {
-                  let borderClass = 'border-2 border-emerald-500/40 bg-gradient-to-r from-emerald-950/30 to-slate-900/90 text-emerald-400';
-                  let sign = '+';
-                  if (item.type === 'Keluar') { 
-                    borderClass = 'border-2 border-rose-500/40 bg-gradient-to-r from-rose-950/30 to-slate-900/90 text-rose-400'; 
-                    sign = '-'; 
-                  }
-                  if (item.type === 'Rusak') { 
-                    borderClass = 'border-2 border-amber-500/40 bg-gradient-to-r from-amber-950/30 to-slate-900/90 text-amber-400'; 
-                    sign = '-'; 
-                  }
-
-                  const isCartBundle = inventoryData.some(i => i.sku === item.sku && i.isBundle);
-
-                  return (
-                    <div key={item.id} className={`flex items-center justify-between p-3.5 rounded-2xl shadow-sm ${borderClass}`}>
-                      <div className="flex-1 overflow-hidden pr-2">
-                        <div className="text-xs font-bold text-white truncate flex items-center gap-1.5">
-                          {item.name}
-                          {isCartBundle && (
-                            <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-purple-500/30 text-purple-300 border border-purple-500/40">
-                              📦 Paket
-                            </span>
-                          )}
-                        </div>
-                        <div className="text-[11px] text-slate-300 flex items-center gap-2 mt-1">
-                          <span className="font-bold">{item.type} ({sign}{item.qty} {isCartBundle ? 'pkt' : 'unit'})</span>
-                          {item.note && item.note !== '-' && (
-                            <span className="truncate italic text-slate-400 font-medium">"{item.note}"</span>
-                          )}
-                        </div>
-                      </div>
-                      <button 
-                        type="button" 
-                        onClick={() => handleRemoveFromCart(item.id)} 
-                        className="p-2 text-slate-400 hover:text-rose-400 hover:bg-rose-500/20 rounded-xl transition-all border border-white/10"
-                      >
-                        <Trash2 size={15} strokeWidth={2.5} />
-                      </button>
-                    </div>
-                  );
-                })}
-              </div>
-
-              <button 
-                type="button" 
-                onClick={handleSubmitCart} 
-                className="w-full text-white bg-gradient-to-r from-blue-600 via-cyan-600 to-teal-500 hover:from-blue-500 hover:to-teal-400 focus:ring-4 focus:ring-cyan-500/30 font-black rounded-2xl text-sm px-5 py-4 text-center transition-all active:scale-[0.98] shadow-xl shadow-cyan-500/25 flex justify-center items-center gap-2 border-2 border-cyan-400/40"
-              >
-                <CheckCircle size={18} strokeWidth={2.5} />
-                <span>Simpan Semua ({cart.length} Transaksi) ke Database</span>
-              </button>
+              )}
             </div>
-          )}
+
+            {cart.length === 0 ? (
+              <div className="p-6 text-center rounded-2xl border-2 border-dashed border-white/10 bg-slate-950/40">
+                <Layers className="mx-auto text-slate-500 mb-2" size={28} />
+                <p className="text-xs font-bold text-slate-300">Antrean Masih Kosong</p>
+                <p className="text-[11px] text-slate-400 mt-1.5 leading-relaxed">
+                  Gunakan <span className="text-cyan-300 font-semibold">Pilihan 1</span> untuk menampung beberapa transaksi sekaligus, lalu simpan bersamaan ke database.
+                </p>
+              </div>
+            ) : (
+              <>
+                <div className="space-y-2.5 max-h-[380px] overflow-y-auto custom-scrollbar pr-1 mb-4">
+                  {cart.map((item) => {
+                    let borderClass = 'border-2 border-emerald-500/40 bg-gradient-to-r from-emerald-950/30 to-slate-900/90 text-emerald-400';
+                    let sign = '+';
+                    if (item.type === 'Keluar') { 
+                      borderClass = 'border-2 border-rose-500/40 bg-gradient-to-r from-rose-950/30 to-slate-900/90 text-rose-400'; 
+                      sign = '-'; 
+                    }
+                    if (item.type === 'Rusak') { 
+                      borderClass = 'border-2 border-amber-500/40 bg-gradient-to-r from-amber-950/30 to-slate-900/90 text-amber-400'; 
+                      sign = '-'; 
+                    }
+
+                    const isCartBundle = inventoryData.some(i => i.sku === item.sku && i.isBundle);
+
+                    return (
+                      <div key={item.id} className={`flex items-center justify-between p-3.5 rounded-2xl shadow-sm ${borderClass}`}>
+                        <div className="flex-1 overflow-hidden pr-2">
+                          <div className="text-xs font-bold text-white truncate flex items-center gap-1.5">
+                            {item.name}
+                            {isCartBundle && (
+                              <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-purple-500/30 text-purple-300 border border-purple-500/40">
+                                📦 Paket
+                              </span>
+                            )}
+                          </div>
+                          <div className="text-[11px] text-slate-300 flex items-center gap-2 mt-1">
+                            <span className="font-bold">{item.type} ({sign}{item.qty} {isCartBundle ? 'pkt' : 'unit'})</span>
+                            {item.note && item.note !== '-' && (
+                              <span className="truncate italic text-slate-400 font-medium">"{item.note}"</span>
+                            )}
+                          </div>
+                        </div>
+                        <button 
+                          type="button" 
+                          onClick={() => handleRemoveFromCart(item.id)} 
+                          className="p-2 text-slate-400 hover:text-rose-400 hover:bg-rose-500/20 rounded-xl transition-all border border-white/10"
+                        >
+                          <Trash2 size={15} strokeWidth={2.5} />
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <button 
+                  type="button" 
+                  onClick={handleSubmitCart} 
+                  className="w-full text-white bg-gradient-to-r from-blue-600 via-cyan-600 to-teal-500 hover:from-blue-500 hover:to-teal-400 focus:ring-4 focus:ring-cyan-500/30 font-black rounded-2xl text-xs sm:text-sm px-4 py-3.5 text-center transition-all active:scale-[0.98] shadow-xl shadow-cyan-500/25 flex justify-center items-center gap-2 border-2 border-cyan-400/40 cursor-pointer"
+                >
+                  <CheckCircle size={18} strokeWidth={2.5} />
+                  <span>Simpan Semua ({cart.length}) ke Database</span>
+                </button>
+              </>
+            )}
+          </div>
         </div>
       </div>
     </section>

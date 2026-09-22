@@ -666,7 +666,7 @@ export default function App() {
           onSelectTheme={setTheme}
         />
       ) : (
-        <div className="pb-24">
+        <div className="pb-24 md:pb-10">
           <Header 
             connectionStatus={connectionStatus}
             isRefreshing={isRefreshing}
@@ -675,9 +675,12 @@ export default function App() {
             onOpenImportModal={() => handleOpenImportModal('inventory')}
             currentTheme={theme}
             onSelectTheme={setTheme}
+            currentView={currentView}
+            onSwitchView={setCurrentView}
+            currentUser={currentUser}
           />
 
-          <main className="max-w-3xl mx-auto px-5 py-6 relative">
+          <main className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 relative">
             {currentView === 'dashboard' && (
               <DashboardView 
                 inventoryData={inventoryData}

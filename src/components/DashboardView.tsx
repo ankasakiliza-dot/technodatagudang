@@ -116,8 +116,9 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
   return (
     <section className="space-y-6 view-enter">
-      {/* Top Cards */}
-      <div className="grid grid-cols-2 gap-4">
+      {/* Top Stat Cards - 4 Columns on Laptop/PC */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Card 1: Master Barang */}
         <div className="glass-panel rounded-3xl p-5 flex flex-col justify-center relative overflow-hidden group">
           <div className="absolute -right-4 -top-4 w-16 h-16 bg-blue-500/20 rounded-full blur-xl group-hover:bg-blue-500/30 transition-all"></div>
           <span className="text-slate-400 text-xs font-semibold uppercase tracking-wider mb-1 flex items-center gap-1.5">
@@ -125,13 +126,14 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             Total Master Barang
           </span>
           <div className="flex items-baseline gap-2">
-            <span className="text-4xl font-black text-white">{totalItems}</span>
+            <span className="text-3xl sm:text-4xl font-black text-white">{totalItems}</span>
             {countPaket > 0 && (
               <span className="text-xs font-semibold text-purple-300">({countPaket} paket)</span>
             )}
           </div>
         </div>
 
+        {/* Card 2: Unit Fisik */}
         <div className="bg-gradient-to-br from-blue-600 to-cyan-500 rounded-3xl p-5 shadow-lg shadow-blue-500/25 flex flex-col justify-center relative overflow-hidden">
           <div className="absolute -right-2 -bottom-2 opacity-20 text-white">
             <Package size={60} />
@@ -140,7 +142,43 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             <Package size={12} />
             Total Unit Fisik
           </span>
-          <span className="text-4xl font-black text-white relative z-10">{totalUnits}</span>
+          <span className="text-3xl sm:text-4xl font-black text-white relative z-10">{totalUnits}</span>
+        </div>
+
+        {/* Card 3: Barang Paket (Bundle) */}
+        <div className="glass-panel rounded-3xl p-5 flex flex-col justify-center relative overflow-hidden group border border-purple-500/25 bg-gradient-to-br from-purple-950/20 to-slate-900/90">
+          <div className="absolute -right-3 -top-3 w-16 h-16 bg-purple-500/20 rounded-full blur-xl group-hover:bg-purple-500/30 transition-all"></div>
+          <span className="text-purple-300 text-xs font-semibold uppercase tracking-wider mb-1 flex items-center gap-1.5">
+            <Boxes size={12} />
+            Paket Bundling
+          </span>
+          <div className="flex items-baseline gap-2">
+            <span className="text-3xl sm:text-4xl font-black text-white">{countPaket}</span>
+            <span className="text-xs text-purple-400 font-medium">varian aktif</span>
+          </div>
+        </div>
+
+        {/* Card 4: Status Kritis / Perhatian */}
+        <div className={`glass-panel rounded-3xl p-5 flex flex-col justify-center relative overflow-hidden group border ${
+          countHabis > 0 
+            ? 'border-rose-500/40 bg-gradient-to-br from-rose-950/20 to-slate-900/90' 
+            : countTipis > 0 
+              ? 'border-amber-500/40 bg-gradient-to-br from-amber-950/20 to-slate-900/90' 
+              : 'border-emerald-500/40 bg-gradient-to-br from-emerald-950/20 to-slate-900/90'
+        }`}>
+          <div className="absolute -right-3 -top-3 w-16 h-16 bg-rose-500/10 rounded-full blur-xl"></div>
+          <span className="text-slate-400 text-xs font-semibold uppercase tracking-wider mb-1 flex items-center gap-1.5">
+            <AlertTriangle size={12} className={countHabis > 0 ? 'text-rose-400' : countTipis > 0 ? 'text-amber-400' : 'text-emerald-400'} />
+            Perlu Perhatian
+          </span>
+          <div className="flex items-baseline gap-2">
+            <span className={`text-3xl sm:text-4xl font-black ${countHabis > 0 ? 'text-rose-400' : countTipis > 0 ? 'text-amber-400' : 'text-emerald-400'}`}>
+              {countHabis + countTipis}
+            </span>
+            <span className="text-xs text-slate-400 font-medium">
+              ({countHabis} habis, {countTipis} tipis)
+            </span>
+          </div>
         </div>
       </div>
 
@@ -245,8 +283,9 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 <thead className="bg-slate-900/95 backdrop-blur-md text-[10px] sm:text-[11px] uppercase tracking-wider text-slate-400 border-b border-white/10 sticky top-0 z-10 font-bold">
                   <tr>
                     <th scope="col" className="px-3 sm:px-4 py-3 whitespace-nowrap w-24 sm:w-28">SKU</th>
-                    <th scope="col" className="px-3 sm:px-4 py-3 min-w-[170px]">ITEM</th>
+                    <th scope="col" className="px-3 sm:px-4 py-3 min-w-[200px]">ITEM</th>
                     <th scope="col" className="px-3 sm:px-4 py-3 text-right whitespace-nowrap">STOK / KAPASITAS</th>
+                    <th scope="col" className="px-3 sm:px-4 py-3 text-center whitespace-nowrap hidden lg:table-cell">MIN STOK</th>
                     <th scope="col" className="px-3 sm:px-4 py-3 text-center whitespace-nowrap">STATUS</th>
                     <th scope="col" className="px-3 sm:px-4 py-3 text-center whitespace-nowrap">AKSI</th>
                   </tr>
@@ -288,10 +327,10 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                           </span>
                         </td>
 
-                        {/* ITEM NAME (smaller, clear, legible font) */}
+                        {/* ITEM NAME */}
                         <td className="px-3 sm:px-4 py-3 align-top sm:align-middle">
                           <div className="flex flex-col gap-1">
-                            <span className="text-xs sm:text-[13px] font-semibold text-white leading-snug break-words max-w-xs sm:max-w-md">
+                            <span className="text-xs sm:text-[13px] font-semibold text-white leading-snug break-words">
                               {item.name}
                             </span>
                             {item.isBundle && (
@@ -318,6 +357,11 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                           <span className="text-[11px] font-normal text-slate-400 ml-1">
                             {item.isBundle ? 'pkt' : 'unit'}
                           </span>
+                        </td>
+
+                        {/* MIN STOK (DESKTOP) */}
+                        <td className="px-3 sm:px-4 py-3 text-center whitespace-nowrap align-top sm:align-middle hidden lg:table-cell font-mono text-slate-400 font-semibold">
+                          {item.isBundle ? '-' : min}
                         </td>
 
                         {/* STATUS */}
@@ -410,7 +454,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             </div>
           </div>
 
-          <div className="space-y-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
             {recentTransactions.map(tx => {
               const isMasuk = tx.type === 'Masuk';
               const isRusak = tx.type === 'Rusak';
