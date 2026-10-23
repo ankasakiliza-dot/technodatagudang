@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Loader2, Sun, Moon } from 'lucide-react';
+import { Loader2, Sun, Moon, Eye, EyeOff } from 'lucide-react';
 import { AppUser } from '../types';
 import { isThemeLight } from '../lib/themeConfig';
 import { AppLogo } from './AppLogo';
@@ -23,6 +23,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
 }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const isLight = isThemeLight(currentTheme);
 
   const handleToggleTheme = () => {
@@ -111,14 +112,25 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
             <label className="block text-[11px] font-semibold text-slate-400 uppercase tracking-wide mb-1.5 ml-1">
               Password
             </label>
-            <input 
-              type="password" 
-              required 
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              className="w-full bg-slate-900/50 border border-white/10 text-white text-sm rounded-xl focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 block p-4 outline-none transition-all placeholder-slate-600 font-medium" 
-              placeholder="••••••••"
-            />
+            <div className="relative">
+              <input 
+                type={showPassword ? 'text' : 'password'} 
+                required 
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                className="w-full bg-slate-900/50 border border-white/10 text-white text-sm rounded-xl focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 block p-4 pr-12 outline-none transition-all placeholder-slate-600 font-medium" 
+                placeholder="••••••••"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(prev => !prev)}
+                className="absolute right-3.5 top-1/2 -translate-y-1/2 p-1.5 text-slate-400 hover:text-white transition-colors rounded-lg focus:outline-none"
+                title={showPassword ? 'Sembunyikan password' : 'Lihat password'}
+                aria-label={showPassword ? 'Sembunyikan password' : 'Lihat password'}
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
           </div>
 
           <button 

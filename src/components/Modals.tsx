@@ -26,7 +26,9 @@ import {
   Search,
   ChevronDown,
   Package,
-  Info
+  Info,
+  Eye,
+  EyeOff
 } from 'lucide-react';
 import { InventoryItem, Transaction, UserRole, BundleComponent } from '../types';
 import { calculateBundleStock } from '../lib/bundleUtils';
@@ -223,11 +225,14 @@ export const Modals: React.FC<ModalsProps> = ({
   // State for Add User Modal
   const [newUsername, setNewUsername] = useState('');
   const [newUserPassword, setNewUserPassword] = useState('');
+  const [showNewUserPassword, setShowNewUserPassword] = useState(false);
   const [newUserRole, setNewUserRole] = useState<UserRole>('staf');
 
   // State for Change Password Modal
   const [oldPassword, setOldPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
+  const [showOldPassword, setShowOldPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
 
   // State for Integration Modal
   const [copiedScript, setCopiedScript] = useState(false);
@@ -347,6 +352,7 @@ export const Modals: React.FC<ModalsProps> = ({
     onSaveNewUser(newUsername, newUserPassword, newUserRole);
     setNewUsername('');
     setNewUserPassword('');
+    setShowNewUserPassword(false);
     setNewUserRole('staf');
   };
 
@@ -355,6 +361,8 @@ export const Modals: React.FC<ModalsProps> = ({
     onSaveChangePassword(oldPassword, newPassword);
     setOldPassword('');
     setNewPassword('');
+    setShowOldPassword(false);
+    setShowNewPassword(false);
   };
 
   return (
@@ -765,15 +773,26 @@ export const Modals: React.FC<ModalsProps> = ({
                 <label className="block text-[11px] font-semibold text-slate-400 uppercase tracking-wide mb-1.5 text-center">
                   Password
                 </label>
-                <input 
-                  type="password" 
-                  required 
-                  minLength={4}
-                  value={newUserPassword}
-                  onChange={e => setNewUserPassword(e.target.value)}
-                  className="w-full text-center bg-slate-900 border border-white/10 text-white text-sm rounded-xl focus:ring-2 focus:ring-emerald-500/50 block p-3 outline-none transition-all placeholder-slate-600" 
-                  placeholder="••••••••"
-                />
+                <div className="relative">
+                  <input 
+                    type={showNewUserPassword ? 'text' : 'password'} 
+                    required 
+                    minLength={4}
+                    value={newUserPassword}
+                    onChange={e => setNewUserPassword(e.target.value)}
+                    className="w-full text-center bg-slate-900 border border-white/10 text-white text-sm rounded-xl focus:ring-2 focus:ring-emerald-500/50 block p-3 pr-10 outline-none transition-all placeholder-slate-600" 
+                    placeholder="••••••••"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowNewUserPassword(prev => !prev)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-white transition-colors rounded-lg focus:outline-none"
+                    title={showNewUserPassword ? 'Sembunyikan password' : 'Lihat password'}
+                    aria-label={showNewUserPassword ? 'Sembunyikan password' : 'Lihat password'}
+                  >
+                    {showNewUserPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
               </div>
 
               <div>
@@ -1009,29 +1028,51 @@ export const Modals: React.FC<ModalsProps> = ({
                 <label className="block text-[11px] font-semibold text-slate-400 uppercase tracking-wide mb-1.5 ml-1">
                   Password Lama
                 </label>
-                <input 
-                  type="password" 
-                  required 
-                  value={oldPassword}
-                  onChange={e => setOldPassword(e.target.value)}
-                  className="w-full bg-slate-900 border border-white/10 text-white text-sm rounded-xl focus:ring-2 focus:ring-blue-500/50 block p-3 outline-none transition-all placeholder-slate-600" 
-                  placeholder="••••••••"
-                />
+                <div className="relative">
+                  <input 
+                    type={showOldPassword ? 'text' : 'password'} 
+                    required 
+                    value={oldPassword}
+                    onChange={e => setOldPassword(e.target.value)}
+                    className="w-full bg-slate-900 border border-white/10 text-white text-sm rounded-xl focus:ring-2 focus:ring-blue-500/50 block p-3 pr-10 outline-none transition-all placeholder-slate-600" 
+                    placeholder="••••••••"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowOldPassword(prev => !prev)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-white transition-colors rounded-lg focus:outline-none"
+                    title={showOldPassword ? 'Sembunyikan password' : 'Lihat password'}
+                    aria-label={showOldPassword ? 'Sembunyikan password' : 'Lihat password'}
+                  >
+                    {showOldPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
               </div>
 
               <div>
                 <label className="block text-[11px] font-semibold text-slate-400 uppercase tracking-wide mb-1.5 ml-1">
                   Password Baru
                 </label>
-                <input 
-                  type="password" 
-                  required 
-                  minLength={4}
-                  value={newPassword}
-                  onChange={e => setNewPassword(e.target.value)}
-                  className="w-full bg-slate-900 border border-white/10 text-white text-sm rounded-xl focus:ring-2 focus:ring-blue-500/50 block p-3 outline-none transition-all placeholder-slate-600" 
-                  placeholder="••••••••"
-                />
+                <div className="relative">
+                  <input 
+                    type={showNewPassword ? 'text' : 'password'} 
+                    required 
+                    minLength={4}
+                    value={newPassword}
+                    onChange={e => setNewPassword(e.target.value)}
+                    className="w-full bg-slate-900 border border-white/10 text-white text-sm rounded-xl focus:ring-2 focus:ring-blue-500/50 block p-3 pr-10 outline-none transition-all placeholder-slate-600" 
+                    placeholder="••••••••"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowNewPassword(prev => !prev)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-white transition-colors rounded-lg focus:outline-none"
+                    title={showNewPassword ? 'Sembunyikan password' : 'Lihat password'}
+                    aria-label={showNewPassword ? 'Sembunyikan password' : 'Lihat password'}
+                  >
+                    {showNewPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
               </div>
 
               <div className="flex gap-3 pt-3">
